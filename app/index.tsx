@@ -11,7 +11,7 @@ import {
   UserRound, ChevronUp, Check, Trash2, Layers, BookMarked, Save, FlaskConical,
   Languages, Calculator, Globe2, Code2, Leaf, Scale, TrendingUp, Microscope,
   ChevronLeft, ChevronRight, Printer, ShieldCheck, Clock3, User as UserIcon,
-  Trophy, GripVertical, SlidersHorizontal,
+  Trophy, GripVertical, SlidersHorizontal, Mail, Phone, KeyRound, Briefcase,
 } from 'lucide-react-native';
 
 const C = {
@@ -1373,6 +1373,515 @@ function AssessmentConfigScreen({ search: globalSearch, show }: { search: string
   );
 }
 
+// === USERS & PERMISSIONS DATA ===
+const INITIAL_USERS = [
+  { id: '1', initials: 'AJ', name: 'Adebayo Johnson', email: 'adebayo.johnson@akoka.edu.ng', phone: '0803 456 7890', role: 'Administrator', classes: '—', subjects: '—', status: 'Active', tone: 'green', gender: 'Male', dateJoined: 'Jan 5, 2024', activity: [['User login from 192.168.1.10', '2 hours ago'], ['Permissions updated for 3 users', '1 day ago'], ['New administrator account created', '3 days ago']] as [string, string][] },
+  { id: '2', initials: 'GO', name: 'Mrs. Grace Okafor', email: 'grace.okafor@akoka.edu.ng', phone: '0806 123 4567', role: 'Form Teacher', classes: 'JSS1A', subjects: 'Mathematics, English Language', status: 'Active', tone: 'blue', gender: 'Female', dateJoined: 'Aug 12, 2024', activity: [['JSS1A attendance submitted', '3 hours ago'], ['Mathematics Test 1 scores uploaded', '1 day ago'], ['Class report generated', '4 days ago']] as [string, string][] },
+  { id: '3', initials: 'EI', name: 'Emmanuel Ibe', email: 'emmanuel.ibe@akoka.edu.ng', phone: '0812 345 6789', role: 'Subject Teacher', classes: 'SS1B, SS2B', subjects: 'Physics, Chemistry', status: 'Active', tone: 'purple', gender: 'Male', dateJoined: 'Sep 3, 2024', activity: [['SS1B Physics Test 1 verified', '5 hours ago'], ['Chemistry scores compiled', '2 days ago']] as [string, string][] },
+  { id: '4', initials: 'BA', name: 'Blessing Adekunle', email: 'blessing.adekunle@akoka.edu.ng', phone: '0703 987 6543', role: 'Subject Teacher', classes: 'JSS3A, SS3A', subjects: 'Biology, Agricultural Science', status: 'Active', tone: 'orange', gender: 'Female', dateJoined: 'Sep 5, 2024', activity: [['SS3A Biology practical uploaded', '6 hours ago'], ['Agric Science project graded', '3 days ago']] as [string, string][] },
+  { id: '5', initials: 'ST', name: 'Samuel Tunde', email: 'samuel.tunde@akoka.edu.ng', phone: '0809 111 2233', role: 'Form Teacher', classes: 'SS2A', subjects: '—', status: 'Active', tone: 'blue', gender: 'Male', dateJoined: 'Aug 22, 2024', activity: [['SS2A attendance submitted', '1 hour ago'], ['Parent meeting notes uploaded', '2 days ago']] as [string, string][] },
+  { id: '6', initials: 'OL', name: 'Oluwaseun Lawal', email: 'lawal.oluwaseun@akoka.edu.ng', phone: '0814 555 6677', role: 'Subject Teacher', classes: 'SS1A, SS1B', subjects: 'English Language, Literature-in-English', status: 'Active', tone: 'purple', gender: 'Male', dateJoined: 'Sep 8, 2024', activity: [['Literature essay graded', '4 hours ago'], ['SS1B English Test 1 uploaded', '1 day ago']] as [string, string][] },
+  { id: '7', initials: 'FH', name: 'Fatima Hashim', email: 'fatima.hashim@akoka.edu.ng', phone: '0706 222 3344', role: 'Subject Teacher', classes: 'JSS2B, JSS3B', subjects: 'Civic Education, Government', status: 'Active', tone: 'orange', gender: 'Female', dateJoined: 'Sep 10, 2024', activity: [['JSS3B Civic Ed scores uploaded', '7 hours ago'], ['Government assignment graded', '5 days ago']] as [string, string][] },
+  { id: '8', initials: 'AB', name: 'Ahmed Bello', email: 'ahmed.bello@akoka.edu.ng', phone: '0807 888 9999', role: 'Exam Officer', classes: '—', subjects: '—', status: 'Active', tone: 'green', gender: 'Male', dateJoined: 'Jul 1, 2024', activity: [['Exam schedule published', '1 day ago'], ['Question papers reviewed', '1 week ago']] as [string, string][] },
+  { id: '9', initials: 'ZM', name: 'Zainab Musa', email: 'zainab.musa@akoka.edu.ng', phone: '0815 666 7788', role: 'Librarian', classes: '—', subjects: '—', status: 'Active', tone: 'blue', gender: 'Female', dateJoined: 'Oct 15, 2024', activity: [['Library inventory updated', '2 days ago'], ['New textbooks catalogued', '1 week ago']] as [string, string][] },
+  { id: '10', initials: 'IK', name: 'Ibrahim Kanu', email: 'ibrahim.kanu@akoka.edu.ng', phone: '0708 444 5566', role: 'ICT Support', classes: '—', subjects: '—', status: 'Inactive', tone: 'purple', gender: 'Male', dateJoined: 'Mar 20, 2024', activity: [['Account deactivated', '2 weeks ago'], ['Last login from 192.168.1.45', '3 weeks ago']] as [string, string][] },
+];
+
+const ROLE_BADGE: Record<string, [string, string]> = {
+  'Administrator': ['#FFE1E1', '#D92E32'],
+  'Form Teacher': ['#DFF5E9', '#08754F'],
+  'Subject Teacher': ['#E0ECFF', '#176DDA'],
+  'Exam Officer': ['#FFF0D4', '#C27A08'],
+  'Librarian': ['#EFE3FF', '#6E35D4'],
+  'ICT Support': ['#E2EAF0', '#334F6E'],
+};
+
+const USER_TONES: Record<string, [string, string]> = {
+  green: ['#DFF5E9', '#075B46'], blue: ['#DCE9FF', '#2467D1'],
+  purple: ['#EBDDFF', '#6E35D4'], orange: ['#FFF0D4', '#B8790B'],
+};
+
+// === USERS & PERMISSIONS SCREEN ===
+function UsersPermissionsScreen({ search: globalSearch, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 1180;
+  const [users, setUsers] = useState(INITIAL_USERS);
+  const [selectedId, setSelectedId] = useState<string | null>('2');
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All Roles');
+  const [statusFilter, setStatusFilter] = useState('All Statuses');
+  const [page, setPage] = useState(1);
+  const [tab, setTab] = useState<'Assignments' | 'Activity Log'>('Assignments');
+  const [assignmentType, setAssignmentType] = useState<'Form Teacher' | 'Subject Teacher'>('Form Teacher');
+  const [assignmentDraft, setAssignmentDraft] = useState({ className: '', arm: '', subject: '' });
+  const [assignments, setAssignments] = useState<{ type: string; label: string }[]>([
+    { type: 'Form Teacher', label: 'JSS1A — Form Teacher' },
+    { type: 'Subject Teacher', label: 'Mathematics — JSS1A' },
+    { type: 'Subject Teacher', label: 'English Language — JSS1A' },
+  ]);
+  const [addModal, setAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [rowActions, setRowActions] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [addForm, setAddForm] = useState<any>({ name: '', email: '', phone: '', role: 'Subject Teacher', gender: 'Male', status: 'Active' });
+
+  const selectedUser = users.find(u => u.id === selectedId) || null;
+  const effectiveSearch = (search || globalSearch).trim().toLowerCase();
+  const roles = ['All Roles', 'Administrator', 'Form Teacher', 'Subject Teacher', 'Exam Officer', 'Librarian', 'ICT Support'];
+  const statuses = ['All Statuses', 'Active', 'Inactive'];
+
+  const filtered = useMemo(() => users.filter(u => {
+    const matchesSearch = !effectiveSearch || [u.name, u.email, u.phone].some(v => v.toLowerCase().includes(effectiveSearch));
+    const matchesRole = roleFilter === 'All Roles' || u.role === roleFilter;
+    const matchesStatus = statusFilter === 'All Statuses' || u.status === statusFilter;
+    return matchesSearch && matchesRole && matchesStatus;
+  }), [users, effectiveSearch, roleFilter, statusFilter]);
+
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const visible = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  function saveAssignment() {
+    if (!assignmentDraft.className || !assignmentDraft.arm) { show('Class and Arm are required', 'error'); return; }
+    if (assignmentType === 'Subject Teacher' && !assignmentDraft.subject) { show('Subject is required for Subject Teacher assignments', 'error'); return; }
+    const label = assignmentType === 'Form Teacher'
+      ? `${assignmentDraft.className}${assignmentDraft.arm} — Form Teacher`
+      : `${assignmentDraft.subject} — ${assignmentDraft.className}${assignmentDraft.arm}`;
+    setAssignments(curr => [...curr, { type: assignmentType, label }]);
+    setAssignmentDraft({ className: '', arm: '', subject: '' });
+    show('Assignment added', 'success');
+  }
+
+  function saveAddUser() {
+    if (!addForm.name?.trim() || !addForm.email?.trim()) { show('Name and email are required', 'error'); return; }
+    const initials = addForm.name.trim().split(/\s+/).slice(0, 2).map((p: string) => p[0]).join('').toUpperCase();
+    const user = { ...addForm, id: String(Date.now()), initials, classes: '—', subjects: '—', tone: 'green', dateJoined: 'Just now', activity: [['Account created', 'just now']] as [string, string][] };
+    setUsers(curr => [user, ...curr]);
+    setAddModal(false);
+    setAddForm({ name: '', email: '', phone: '', role: 'Subject Teacher', gender: 'Male', status: 'Active' });
+    setSelectedId(user.id);
+    show(`${user.name} added`, 'success');
+  }
+
+  function saveEditUser() {
+    if (!editForm.name?.trim()) { show('Name is required', 'error'); return; }
+    setUsers(curr => curr.map(u => u.id === selectedUser!.id ? { ...u, ...editForm } : u));
+    setEditModal(false);
+    show('User updated', 'success');
+  }
+
+  function toggleUserStatus(id: string) {
+    setUsers(curr => curr.map(u => u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
+    setRowActions(null);
+    show('User status updated', 'info');
+  }
+
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', minHeight: 0 }}>
+      <ScrollView style={{ flex: 1, minWidth: 0 }} contentContainerStyle={{ padding: 24, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+        {/* Page header */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginBottom: 18, flexWrap: 'wrap' }}>
+          <View style={{ flex: 1, minWidth: 280 }}>
+            <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Users & Permissions</Text>
+            <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Manage school staff, teaching assignments, and account roles.</Text>
+          </View>
+          <Pressable onPress={() => setAddModal(true)} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 37, paddingHorizontal: 15 }}>
+            <Plus size={16} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Add User</Text>
+          </Pressable>
+        </View>
+
+        {/* Stats row */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+          {[['Total Users', '18', '↑ 2 new this term', 'green', Users], ['Active Users', '16', '↑ 1 new this term', 'blue', UserRound], ['Teachers', '12', '↑ 1 new this term', 'purple', GraduationCap], ['Administrators', '2', '— No change', 'orange', Shield]].map(([label, value, change, tone, Ic]: any) => {
+            const [bg, fg] = USER_TONES[tone] || USER_TONES.green;
+            return (
+              <View key={label} style={{ flex: 1, minWidth: 200, minHeight: 110, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 17, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}><Ic size={24} color={fg} /></View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{label}</Text>
+                  <Text style={{ color: '#142F4D', fontSize: 24, fontWeight: '800', marginTop: 4 }}>{value}</Text>
+                  <Text style={{ color: '#08754F', fontSize: 10, fontWeight: '600', marginTop: 6 }}>{change}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Directory card */}
+        <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 14 }}>
+          {/* Filters */}
+          <View style={{ flexDirection: 'row', gap: 9, marginBottom: 10, flexWrap: 'wrap' }}>
+            <View style={{ flex: 1, minWidth: 200, height: 36, flexDirection: 'row', alignItems: 'center', gap: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, backgroundColor: '#FFFFFF' }}>
+              <Search size={16} color="#8299B1" />
+              <TextInput value={search} onChangeText={v => { setSearch(v); setPage(1); }} placeholder="Search by name, email or phone..." placeholderTextColor="#8097B0" style={{ flex: 1, fontSize: 11, color: '#142F4D', padding: 0 }} />
+            </View>
+            <Pressable onPress={() => { setRoleFilter(roles[(roles.indexOf(roleFilter) + 1) % roles.length]); setPage(1); }} style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{roleFilter}</Text><ChevronDown size={15} color="#41698F" />
+            </Pressable>
+            <Pressable onPress={() => { setStatusFilter(statuses[(statuses.indexOf(statusFilter) + 1) % statuses.length]); setPage(1); }} style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{statusFilter}</Text><ChevronDown size={15} color="#41698F" />
+            </Pressable>
+          </View>
+
+          {/* Filter chips */}
+          <View style={{ flexDirection: 'row', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}>
+            {roles.map(item => (
+              <Pressable key={item} onPress={() => { setRoleFilter(item); setPage(1); }} style={{ paddingHorizontal: 9, paddingVertical: 5, borderRadius: 5, borderWidth: 1, borderColor: roleFilter === item ? '#B8E3D0' : '#DCE6EE', backgroundColor: roleFilter === item ? '#E2F4EC' : 'transparent' }}>
+                <Text style={{ fontSize: 10, fontWeight: roleFilter === item ? '700' : '500', color: roleFilter === item ? '#075B46' : '#41698F' }}>{item}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Table */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ minWidth: 1000 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 38, paddingHorizontal: 10, backgroundColor: '#F0F3F6', borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
+                {['Name', 'Email', 'Phone', 'Role', 'Classes', 'Subjects', 'Status', ''].map((h, i) => (
+                  <Text key={h} style={{ width: [180, 200, 110, 130, 100, 160, 80, 38][i], fontSize: 10, fontWeight: '800', color: '#244361', paddingRight: 5 }}>{h}</Text>
+                ))}
+              </View>
+              {visible.map(u => {
+                const [bg, fg] = USER_TONES[u.tone] || USER_TONES.green;
+                const [rbg, rfg] = ROLE_BADGE[u.role] || ['#E2EAF0', '#334F6E'];
+                return (
+                  <Pressable key={u.id} onPress={() => setSelectedId(u.id)} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 49, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#E8EEF3', backgroundColor: selectedId === u.id ? '#E4F6ED' : 'transparent' }}>
+                    <View style={{ width: 180, flexDirection: 'row', alignItems: 'center', gap: 10, paddingRight: 8 }}>
+                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Text style={{ color: fg, fontSize: 12, fontWeight: '800' }}>{u.initials}</Text></View>
+                      <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 11, fontWeight: '700', flexShrink: 1 }}>{u.name}</Text>
+                    </View>
+                    <Text numberOfLines={1} style={{ width: 200, fontSize: 10, color: '#244361', paddingRight: 5 }}>{u.email}</Text>
+                    <Text style={{ width: 110, fontSize: 10, color: '#244361', paddingRight: 5 }}>{u.phone}</Text>
+                    <View style={{ width: 130 }}><View style={{ backgroundColor: rbg, borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: rfg, fontSize: 9, fontWeight: '700' }}>{u.role}</Text></View></View>
+                    <Text numberOfLines={1} style={{ width: 100, fontSize: 10, color: '#244361', paddingRight: 5 }}>{u.classes}</Text>
+                    <Text numberOfLines={1} style={{ width: 160, fontSize: 10, color: '#244361', paddingRight: 5 }}>{u.subjects}</Text>
+                    <View style={{ width: 80 }}><View style={{ backgroundColor: u.status === 'Active' ? '#D7F3E5' : '#FFE5E5', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' }}><Text style={{ color: u.status === 'Active' ? '#075B46' : '#D92E32', fontSize: 9, fontWeight: '700' }}>{u.status}</Text></View></View>
+                    <Pressable onPress={() => setRowActions(rowActions === u.id ? null : u.id)} style={{ width: 38, alignItems: 'center' }}>
+                      <MoreVertical size={17} color="#41698F" />
+                      {rowActions === u.id && (
+                        <View style={{ position: 'absolute', top: 30, right: 0, width: 150, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, zIndex: 100, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}>
+                          {[['View', () => { setSelectedId(u.id); setRowActions(null); }], ['Edit', () => { setEditForm({ ...u }); setEditModal(true); setRowActions(null); }], [u.status === 'Active' ? 'Deactivate' : 'Activate', () => toggleUserStatus(u.id)]].map(([label, action]: any) => (
+                            <Pressable key={label} onPress={action} style={{ paddingHorizontal: 12, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '500' }}>{label}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      )}
+                    </Pressable>
+                  </Pressable>
+                );
+              })}
+              {!visible.length && <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#647F9E', fontSize: 12 }}>No users match your filters.</Text></View>}
+            </View>
+          </ScrollView>
+
+          {/* Pagination */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 12 }}>
+            <Text style={{ color: '#647F9E', fontSize: 10 }}>Showing {filtered.length ? (safePage - 1) * pageSize + 1 : 0}–{Math.min(safePage * pageSize, filtered.length)} of {filtered.length || 18} users</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Pressable onPress={() => setPage(Math.max(1, safePage - 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronLeft size={16} color="#41698F" /></Pressable>
+              {Array.from({ length: Math.min(2, pageCount) }, (_, i) => i + 1).map(number => (
+                <Pressable key={number} onPress={() => setPage(number)} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: safePage === number ? '#006044' : '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: safePage === number ? '#006044' : '#FFFFFF' }}>
+                  <Text style={{ color: safePage === number ? '#FFFFFF' : '#41698F', fontSize: 11, fontWeight: safePage === number ? '800' : '500' }}>{number}</Text>
+                </Pressable>
+              ))}
+              <Pressable onPress={() => setPage(Math.min(pageCount, safePage + 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronRight size={16} color="#41698F" /></Pressable>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Right details panel */}
+      {!compact && (
+        <View style={{ width: 378, borderLeftWidth: 2, borderLeftColor: '#D5E0E8', backgroundColor: '#F8FAFC', padding: 16 }}>
+          <ScrollView style={{ flex: 1, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7 }} contentContainerStyle={{ paddingBottom: 14 }} showsVerticalScrollIndicator={false}>
+            {!selectedUser ? (
+              <View style={{ alignItems: 'center', justifyContent: 'center', padding: 30, gap: 10 }}>
+                <Users size={34} color="#9BAEC0" />
+                <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '700' }}>Select a user</Text>
+                <Text style={{ color: '#647F9E', fontSize: 11, textAlign: 'center' }}>Choose a user from the directory to view their details.</Text>
+              </View>
+            ) : (
+              <>
+                {/* Header */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+                  <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: USER_TONES[selectedUser.tone]?.[0] || '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: USER_TONES[selectedUser.tone]?.[1] || '#075B46', fontSize: 17, fontWeight: '800' }}>{selectedUser.initials}</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                      <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 14, fontWeight: '800', maxWidth: 175 }}>{selectedUser.name}</Text>
+                      <View style={{ backgroundColor: ROLE_BADGE[selectedUser.role]?.[0] || '#E2EAF0', borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: ROLE_BADGE[selectedUser.role]?.[1] || '#334F6E', fontSize: 9, fontWeight: '700' }}>{selectedUser.role}</Text></View>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 }}><Mail size={11} color="#647F9E" /><Text numberOfLines={1} style={{ color: '#647F9E', fontSize: 10 }}>{selectedUser.email}</Text></View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}><Phone size={11} color="#647F9E" /><Text style={{ color: '#647F9E', fontSize: 10 }}>{selectedUser.phone}</Text></View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 8 }}>
+                      <View style={{ backgroundColor: selectedUser.status === 'Active' ? '#D7F3E5' : '#FFE5E5', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: selectedUser.status === 'Active' ? '#075B46' : '#D92E32', fontSize: 9, fontWeight: '700' }}>{selectedUser.status}</Text></View>
+                    </View>
+                  </View>
+                  <Pressable onPress={() => setSelectedId(null)}><X size={19} color="#59728F" /></Pressable>
+                </View>
+
+                {/* Action buttons */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingBottom: 12, flexWrap: 'wrap' }}>
+                  <Pressable onPress={() => { setEditForm({ ...selectedUser }); setEditModal(true); }} style={{ minHeight: 32, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#00513D', borderRadius: 5 }}>
+                    <Pencil size={13} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '700' }}>Edit User</Text>
+                  </Pressable>
+                  <Pressable onPress={() => show(`Opening profile for ${selectedUser.name}`, 'info')} style={{ minHeight: 32, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                    <Eye size={13} color="#274968" /><Text style={{ color: '#274968', fontSize: 9, fontWeight: '600' }}>View Profile</Text>
+                  </Pressable>
+                  <Pressable onPress={() => setResetConfirm(true)} style={{ minHeight: 32, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#FFC6C8', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                    <KeyRound size={13} color="#D92E32" /><Text style={{ color: '#D92E32', fontSize: 9, fontWeight: '600' }}>Reset Password</Text>
+                  </Pressable>
+                </View>
+
+                {/* Basic Information */}
+                <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderTopWidth: 1, borderTopColor: '#E7EDF2' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 9 }}><UserIcon size={19} color="#244361" /><Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Basic Information</Text></View>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+                    {[['Full Name', selectedUser.name], ['Role', selectedUser.role], ['Email', selectedUser.email], ['Gender', selectedUser.gender], ['Phone', selectedUser.phone], ['Date Joined', selectedUser.dateJoined]].map(([label, value]: any) => (
+                      <View key={label} style={{ flexBasis: '47%', flexGrow: 1, minWidth: 130 }}>
+                        <Text style={{ color: '#647F9E', fontSize: 9, fontWeight: '700', marginBottom: 3 }}>{label.toUpperCase()}</Text>
+                        <Text numberOfLines={1} style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{value}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Assigned Classes */}
+                <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderTopWidth: 1, borderTopColor: '#E7EDF2' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 9 }}>
+                    <GraduationCap size={19} color="#244361" /><Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Assigned Classes</Text>
+                    <View style={{ backgroundColor: '#DFF5E9', borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: '#075B46', fontSize: 9, fontWeight: '700' }}>{selectedUser.classes === '—' ? '0' : selectedUser.classes.split(',').length} classes</Text></View>
+                  </View>
+                  {selectedUser.classes === '—' ? <Text style={{ color: '#647F9E', fontSize: 11 }}>No classes assigned</Text> : (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                      {selectedUser.classes.split(', ').map((c: string) => (
+                        <View key={c} style={{ backgroundColor: '#E2F4EC', borderWidth: 1, borderColor: '#B8E3D0', borderRadius: 14, paddingHorizontal: 11, paddingVertical: 5 }}><Text style={{ color: '#075B46', fontSize: 10, fontWeight: '700' }}>{c}</Text></View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Assigned Subjects */}
+                <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderTopWidth: 1, borderTopColor: '#E7EDF2' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 9 }}>
+                    <BookOpen size={19} color="#244361" /><Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Assigned Subjects</Text>
+                    <View style={{ backgroundColor: '#E0ECFF', borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: '#176DDA', fontSize: 9, fontWeight: '700' }}>{selectedUser.subjects === '—' ? '0' : selectedUser.subjects.split(',').length} subjects</Text></View>
+                  </View>
+                  {selectedUser.subjects === '—' ? <Text style={{ color: '#647F9E', fontSize: 11 }}>No subjects assigned</Text> : (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                      {selectedUser.subjects.split(', ').map((s: string) => (
+                        <View key={s} style={{ backgroundColor: '#E0ECFF', borderWidth: 1, borderColor: '#B8CFE3', borderRadius: 14, paddingHorizontal: 11, paddingVertical: 5 }}><Text style={{ color: '#176DDA', fontSize: 10, fontWeight: '700' }}>{s}</Text></View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Tabs */}
+                <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#DCE6EE', paddingHorizontal: 12, marginTop: 4 }}>
+                  {(['Assignments', 'Activity Log'] as const).map(t => (
+                    <Pressable key={t} onPress={() => setTab(t)} style={{ minWidth: 110, paddingVertical: 11, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: tab === t ? '#08765F' : 'transparent' }}>
+                      <Text style={{ color: tab === t ? '#08765F' : '#647F9E', fontSize: 11, fontWeight: 700 }}>{t}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                {/* Tab content */}
+                <View style={{ paddingHorizontal: 12, paddingTop: 14, paddingBottom: 9 }}>
+                  {tab === 'Assignments' ? (
+                    <View>
+                      {/* Existing assignments list */}
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 9 }}>Current Assignments</Text>
+                      <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 6, marginBottom: 14 }}>
+                        {assignments.length ? assignments.map((a, i) => (
+                          <View key={i} style={{ minHeight: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, borderBottomWidth: i < assignments.length - 1 ? 1 : 0, borderBottomColor: '#EEF2F5' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              <View style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: a.type === 'Form Teacher' ? '#DFF5E9' : '#E0ECFF', alignItems: 'center', justifyContent: 'center' }}>
+                                <Briefcase size={13} color={a.type === 'Form Teacher' ? '#075B46' : '#176DDA'} />
+                              </View>
+                              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '500' }}>{a.label}</Text>
+                            </View>
+                            <Pressable onPress={() => setAssignments(curr => curr.filter((_, idx) => idx !== i))}><X size={14} color="#647F9E" /></Pressable>
+                          </View>
+                        )) : <Text style={{ padding: 14, color: '#647F9E', fontSize: 11 }}>No assignments yet.</Text>}
+                      </View>
+
+                      {/* Add assignment form */}
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 9 }}>Add Assignment</Text>
+                      <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 6, padding: 12 }}>
+                        {/* Assignment type */}
+                        <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', marginBottom: 6 }}>Assignment Type</Text>
+                        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+                          {(['Form Teacher', 'Subject Teacher'] as const).map(t => (
+                            <Pressable key={t} onPress={() => setAssignmentType(t)} style={{ flex: 1, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderColor: assignmentType === t ? '#0B765B' : '#DCE6EE', borderRadius: 5, backgroundColor: assignmentType === t ? '#E2F4EC' : 'transparent' }}>
+                              <Text style={{ color: assignmentType === t ? '#075B46' : '#41698F', fontSize: 10, fontWeight: assignmentType === t ? '700' : '500' }}>{t === 'Form Teacher' ? 'Form Teacher (Class Arm)' : 'Subject Teacher (Subject + Class)'}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                        {/* Class dropdown */}
+                        <View style={{ marginBottom: 10 }}>
+                          <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Class *</Text>
+                          <Pressable onPress={() => { const opts = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']; const cur = assignmentDraft.className; setAssignmentDraft((d: any) => ({ ...d, className: opts[(opts.indexOf(cur) + 1) % opts.length] })); }} style={{ minHeight: 36, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                            <Text style={{ color: '#142F4D', fontSize: 11 }}>{assignmentDraft.className || 'Select class'}</Text>
+                            <ChevronDown size={14} color="#647F9E" />
+                          </Pressable>
+                        </View>
+                        {/* Arm dropdown */}
+                        <View style={{ marginBottom: 10 }}>
+                          <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Arm *</Text>
+                          <Pressable onPress={() => { const opts = ['A', 'B', 'C']; const cur = assignmentDraft.arm; setAssignmentDraft((d: any) => ({ ...d, arm: opts[(opts.indexOf(cur) + 1) % opts.length] })); }} style={{ minHeight: 36, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                            <Text style={{ color: '#142F4D', fontSize: 11 }}>{assignmentDraft.arm || 'Select arm'}</Text>
+                            <ChevronDown size={14} color="#647F9E" />
+                          </Pressable>
+                        </View>
+                        {/* Subject dropdown (only for Subject Teacher) */}
+                        {assignmentType === 'Subject Teacher' && (
+                          <View style={{ marginBottom: 12 }}>
+                            <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Subject (optional for Form Teacher)</Text>
+                            <Pressable onPress={() => { const opts = ['Mathematics', 'English Language', 'Biology', 'Chemistry', 'Physics', 'Civic Education']; const cur = assignmentDraft.subject; setAssignmentDraft((d: any) => ({ ...d, subject: opts[(opts.indexOf(cur) + 1) % opts.length] })); }} style={{ minHeight: 36, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                              <Text style={{ color: '#142F4D', fontSize: 11 }}>{assignmentDraft.subject || 'Select subject'}</Text>
+                              <ChevronDown size={14} color="#647F9E" />
+                            </Pressable>
+                          </View>
+                        )}
+                        {/* Buttons */}
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <Pressable onPress={() => setAssignmentDraft({ className: '', arm: '', subject: '' })} style={{ flex: 1, minHeight: 32, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+                            <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700' }}>Cancel</Text>
+                          </Pressable>
+                          <Pressable onPress={saveAssignment} style={{ flex: 1, minHeight: 32, backgroundColor: '#00513D', borderRadius: 5, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>Save Assignment</Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    </View>
+                  ) : (
+                    <View>
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 9 }}>Recent Activity</Text>
+                      {selectedUser.activity.map(([title, time]: any, index: number) => (
+                        <View key={title} style={{ minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                          <View style={{ width: 13, alignItems: 'center' }}>{index === 0 && <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#08765F' }} />}</View>
+                          <Text style={{ color: '#244361', fontSize: 11, flex: 1 }}>{title}</Text>
+                          <Text style={{ color: '#647F9E', fontSize: 9 }}>{time}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Add User Modal */}
+      <Modal visible={addModal} transparent animationType="fade" onRequestClose={() => setAddModal(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 18 }} onPress={() => setAddModal(false)}>
+          <View style={{ width: '100%', maxWidth: 520, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+              <Text style={{ color: '#142F4D', fontSize: 17, fontWeight: '800' }}>Add User</Text>
+              <Pressable onPress={() => setAddModal(false)}><X size={19} color="#41698F" /></Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+              {[['name', 'Full Name', 'e.g. Mrs. Grace Okafor'], ['email', 'Email', 'user@akoka.edu.ng'], ['phone', 'Phone', '0803 456 7890']].map(([key, label, placeholder]: any) => (
+                <View key={key} style={{ width: '100%' }}>
+                  <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>{label}</Text>
+                  <TextInput value={addForm[key] || ''} onChangeText={v => setAddForm((c: any) => ({ ...c, [key]: v }))} placeholder={placeholder} placeholderTextColor="#93A4B6" style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, color: '#142F4D', fontSize: 12 }} />
+                </View>
+              ))}
+              <View style={{ width: '48%', flexGrow: 1, minWidth: 200 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Role</Text>
+                <Pressable onPress={() => { const opts = ['Administrator', 'Form Teacher', 'Subject Teacher', 'Exam Officer', 'Librarian', 'ICT Support']; const cur = addForm.role; setAddForm((c: any) => ({ ...c, role: opts[(opts.indexOf(cur) + 1) % opts.length] })); }} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12 }}>{addForm.role}</Text><ChevronDown size={14} color="#647F9E" />
+                </Pressable>
+              </View>
+              <View style={{ width: '48%', flexGrow: 1, minWidth: 200 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Gender</Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {['Male', 'Female'].map(value => (
+                    <Pressable key={value} onPress={() => setAddForm((c: any) => ({ ...c, gender: value }))} style={{ paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: addForm.gender === value ? '#0B765B' : '#DCE6EE', borderRadius: 5, backgroundColor: addForm.gender === value ? '#E2F4EC' : 'transparent' }}>
+                      <Text style={{ color: addForm.gender === value ? '#075B46' : '#41698F', fontSize: 10, fontWeight: addForm.gender === value ? '700' : '500' }}>{value}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+              <View style={{ width: '100%' }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Status</Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {['Active', 'Inactive'].map(value => (
+                    <Pressable key={value} onPress={() => setAddForm((c: any) => ({ ...c, status: value }))} style={{ paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: addForm.status === value ? '#0B765B' : '#DCE6EE', borderRadius: 5, backgroundColor: addForm.status === value ? '#E2F4EC' : 'transparent' }}>
+                      <Text style={{ color: addForm.status === value ? '#075B46' : '#41698F', fontSize: 10, fontWeight: addForm.status === value ? '700' : '500' }}>{value}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, paddingTop: 14, marginTop: 14, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
+              <Pressable onPress={() => setAddModal(false)} style={{ minHeight: 35, paddingHorizontal: 16, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={saveAddUser} style={{ minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Add User</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal visible={editModal} transparent animationType="fade" onRequestClose={() => setEditModal(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 18 }} onPress={() => setEditModal(false)}>
+          <View style={{ width: '100%', maxWidth: 520, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+              <Text style={{ color: '#142F4D', fontSize: 17, fontWeight: '800' }}>Edit User</Text>
+              <Pressable onPress={() => setEditModal(false)}><X size={19} color="#41698F" /></Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+              {[['name', 'Full Name'], ['email', 'Email'], ['phone', 'Phone']].map(([key, label]: any) => (
+                <View key={key} style={{ width: '100%' }}>
+                  <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>{label}</Text>
+                  <TextInput value={editForm[key] || ''} onChangeText={v => setEditForm((c: any) => ({ ...c, [key]: v }))} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, color: '#142F4D', fontSize: 12 }} />
+                </View>
+              ))}
+              <View style={{ width: '48%', flexGrow: 1, minWidth: 200 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Role</Text>
+                <Pressable onPress={() => { const opts = ['Administrator', 'Form Teacher', 'Subject Teacher', 'Exam Officer', 'Librarian', 'ICT Support']; const cur = editForm.role; setEditForm((c: any) => ({ ...c, role: opts[(opts.indexOf(cur) + 1) % opts.length] })); }} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12 }}>{editForm.role}</Text><ChevronDown size={14} color="#647F9E" />
+                </Pressable>
+              </View>
+              <View style={{ width: '48%', flexGrow: 1, minWidth: 200 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Status</Text>
+                <Pressable onPress={() => setEditForm((c: any) => ({ ...c, status: c.status === 'Active' ? 'Inactive' : 'Active' }))} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12 }}>{editForm.status}</Text><ChevronDown size={14} color="#647F9E" />
+                </Pressable>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, paddingTop: 14, marginTop: 14, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
+              <Pressable onPress={() => setEditModal(false)} style={{ minHeight: 35, paddingHorizontal: 16, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={saveEditUser} style={{ minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Save Changes</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Reset Password Confirmation */}
+      <Modal visible={resetConfirm} transparent animationType="fade" onRequestClose={() => setResetConfirm(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setResetConfirm(false)}>
+          <View style={{ width: '100%', maxWidth: 420, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#FFF9F8', borderWidth: 1, borderColor: '#FFC6C8', alignItems: 'center', justifyContent: 'center' }}><KeyRound size={18} color="#D92E32" /></View>
+              <Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>Reset Password?</Text>
+            </View>
+            <Text style={{ color: '#647F9E', fontSize: 12, lineHeight: 18 }}>This will send a password reset link to <Text style={{ fontWeight: '700', color: '#213B57' }}>{selectedUser?.email}</Text>. The user will be required to set a new password on next login. This is a UI-only placeholder — connect your authentication backend to enable real resets.</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+              <Pressable onPress={() => setResetConfirm(false)} style={{ paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={() => { setResetConfirm(false); show(`Password reset link sent to ${selectedUser?.email} (UI placeholder)`, 'info'); }} style={{ backgroundColor: '#D92E32', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}><KeyRound size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Send Reset Link</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -1463,7 +1972,7 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, and Assessment Configuration */}
+          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, and Users & Permissions */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
           ) : active === 'Subjects & Classes' ? (
@@ -1472,6 +1981,8 @@ export default function App() {
             <StudentsScreen search={search} show={show} />
           ) : active === 'Assessment Configuration' ? (
             <AssessmentConfigScreen search={search} show={show} />
+          ) : active === 'Users & Permissions' ? (
+            <UsersPermissionsScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
