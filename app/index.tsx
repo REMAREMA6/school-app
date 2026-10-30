@@ -7,7 +7,8 @@ import {
   ClipboardCheck, Bell, Sun, Moon, ChevronDown, Search, CalendarDays,
   AlertCircle, Clipboard, CheckCircle2, ArrowRight, Eye,
   Pencil, FileCheck, GraduationCap, Menu, X, ArrowUpRight,
-  UserCircle, LogOut, Sliders,
+  UserCircle, LogOut, Sliders, Plus, MoreVertical, MapPin, School as SchoolIcon,
+  UserRound, ChevronUp, Check,
 } from 'lucide-react-native';
 
 const C = {
@@ -68,6 +69,197 @@ const WF = [
 ];
 
 const NOTIFS = [{ t: '31 batches have incomplete results', time: '1h ago', type: 'alert' }, { t: '48 batches awaiting review', time: '3h ago', type: 'warning' }, { t: '82 report cards published', time: '5h ago', type: 'success' }];
+
+// === SCHOOL CONFIG DATA ===
+const INITIAL_TERMS = [
+  { id: 'first', name: 'First Term', startDate: 'Sep 8, 2025', endDate: 'Dec 12, 2025', status: 'Active' },
+  { id: 'second', name: 'Second Term', startDate: 'Jan 5, 2026', endDate: 'Apr 10, 2026', status: 'Upcoming' },
+  { id: 'third', name: 'Third Term', startDate: 'May 4, 2026', endDate: 'Jul 31, 2026', status: 'Upcoming' },
+];
+const INITIAL_GRADES = [
+  { grade: 'A1', description: 'Excellent', min: '70', max: '100', remark: 'Outstanding performance', credit: true },
+  { grade: 'B2', description: 'Very Good', min: '60', max: '69', remark: 'Above average', credit: true },
+  { grade: 'B3', description: 'Good', min: '50', max: '59', remark: 'Average', credit: true },
+  { grade: 'C4', description: 'Credit', min: '45', max: '49', remark: 'Fair', credit: true },
+  { grade: 'C5', description: 'Credit', min: '40', max: '44', remark: 'Below average', credit: true },
+  { grade: 'C6', description: 'Credit', min: '35', max: '39', remark: 'Poor', credit: true },
+  { grade: 'D7', description: 'Pass', min: '30', max: '34', remark: 'Very poor', credit: true },
+  { grade: 'E8', description: 'Pass', min: '20', max: '29', remark: 'Low performance', credit: false },
+  { grade: 'F9', description: 'Fail', min: '0', max: '19', remark: 'No credit', credit: false },
+];
+
+// === SCHOOL CONFIG SCREEN ===
+function SchoolConfigScreen({ search, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const [terms, setTerms] = useState(INITIAL_TERMS);
+  const [grades, setGrades] = useState(INITIAL_GRADES);
+  const [school, setSchool] = useState({ name: 'Akoka Federal Academy', location: 'Lagos, Nigeria', type: 'Secondary School', month: 'September' });
+  const [sessionExpanded, setSessionExpanded] = useState(true);
+  const [editModal, setEditModal] = useState<{ visible: boolean; title: string; fields: any[]; mode: string }>({ visible: false, title: '', fields: [], mode: '' });
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
+
+  const filteredTerms = useMemo(() => {
+    if (!search.trim()) return terms;
+    return terms.filter(t => `${t.name} ${t.startDate} ${t.endDate} ${t.status}`.toLowerCase().includes(search.toLowerCase()));
+  }, [terms, search]);
+
+  function openEditor(title: string, fields: any[], mode: string) {
+    setEditValues(Object.fromEntries(fields.map(f => [f.key, f.value ?? ''])));
+    setEditModal({ visible: true, title, fields, mode });
+  }
+
+  function saveEditor() {
+    const { mode } = editModal;
+    if (mode === 'school') {
+      setSchool({ name: editValues.name || school.name, location: editValues.location || school.location, type: editValues.type || school.type, month: editValues.month || school.month });
+      show('School information updated', 'success');
+    } else if (mode === 'session') {
+      show(`${editValues.year || 'New session'} entered — demo does not persist sessions`, 'info');
+    } else if (mode.startsWith('term:')) {
+      const id = mode.slice(5);
+      setTerms(curr => curr.map(t => t.id === id ? { ...t, name: editValues.name || t.name, startDate: editValues.startDate || t.startDate, endDate: editValues.endDate || t.endDate, status: editValues.status || t.status } : t));
+      show('Term updated', 'success');
+    } else if (mode === 'grades') {
+      setGrades(curr => curr.map(g => ({ ...g, min: editValues[`${g.grade}_min`] ?? g.min, max: editValues[`${g.grade}_max`] ?? g.max, remark: editValues[`${g.grade}_remark`] ?? g.remark })));
+      show('Grading scale updated', 'success');
+    }
+    setEditModal(c => ({ ...c, visible: false }));
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: 1600, alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
+      {/* Page header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, gap: 16 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>School Configuration</Text>
+          <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Manage school information, academic sessions, terms, and grading rules.</Text>
+        </View>
+        <Pressable onPress={() => openEditor('Edit School Information', [{ key: 'name', label: 'School Name', value: school.name }, { key: 'location', label: 'Location', value: school.location }, { key: 'type', label: 'School Type', value: school.type }, { key: 'month', label: 'Academic Year Start Month', value: school.month }], 'school')} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}>
+          <Pencil size={15} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Edit School</Text>
+        </Pressable>
+      </View>
+
+      {/* School Information card */}
+      <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE7EE', borderRadius: 8, padding: 15, marginBottom: 14 }}>
+        <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 10, paddingHorizontal: 8 }}>School Information</Text>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 10, paddingBottom: 4 }}>
+          {/* Logo tile */}
+          <View style={{ width: 120, height: 100, borderRadius: 8, backgroundColor: '#E3F5EC', alignItems: 'center', justifyContent: 'center', marginRight: 30 }}>
+            <Svg width={70} height={78} viewBox="0 0 64 72"><Path d="M7 8 L32 3 L57 8 L56 42 Q52 58 32 68 Q12 58 8 42 Z" fill="none" stroke="#075340" strokeWidth="3.2" /><Path d="M13 13 L32 9 L51 13 L50 41 Q46 53 32 61 Q18 53 14 41 Z" fill="none" stroke="#075340" strokeWidth="1.3" /><Path d="M21 23 L28 18 L32 25 L36 18 L43 23 L39 31 L44 42 L37 42 L32 34 L27 42 L20 42 L25 31 Z" fill="#075340" /><Path d="M27 46 L37 46 M29 50 L35 50" stroke="#075340" strokeWidth="2" strokeLinecap="round" /><Circle cx="32" cy="15" r="2" fill="#075340" /></Svg>
+            <Text style={{ color: '#075340', fontSize: 11, fontWeight: '800', marginTop: 4 }}>AFA</Text>
+          </View>
+          {/* Details */}
+          <View style={{ flex: 1.2 }}>
+            <Text style={{ color: '#6C83A0', fontSize: 10, marginBottom: 7 }}>School Name</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><UserRound size={16} color="#204B60" /><Text style={{ color: '#19334F', fontSize: 12, fontWeight: '600' }}>{school.name}</Text></View>
+            <Text style={{ color: '#6C83A0', fontSize: 10, marginTop: 17, marginBottom: 7 }}>Location</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><MapPin size={16} color="#204B60" /><Text style={{ color: '#19334F', fontSize: 12, fontWeight: '600' }}>{school.location}</Text></View>
+          </View>
+          <View style={{ flex: 0.9, borderLeftWidth: 1, borderLeftColor: '#DCE6EE', paddingLeft: 30 }}>
+            <Text style={{ color: '#6C83A0', fontSize: 10, marginBottom: 7 }}>School Type</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><SchoolIcon size={16} color="#204B60" /><Text style={{ color: '#19334F', fontSize: 11, fontWeight: '600' }}>{school.type}</Text></View>
+            <Text style={{ color: '#6C83A0', fontSize: 10, marginTop: 17, marginBottom: 7 }}>Academic Year Start</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><CalendarDays size={16} color="#204B60" /><Text style={{ color: '#19334F', fontSize: 12, fontWeight: '600' }}>{school.month}</Text></View>
+          </View>
+        </View>
+      </View>
+
+      {/* Academic Sessions */}
+      <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE7EE', borderRadius: 8, padding: 15, marginBottom: 14 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 11 }}>
+          <View style={{ flex: 1 }}><Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Academic Sessions</Text><Text style={{ color: '#6A83A0', fontSize: 11, marginTop: 5 }}>Manage academic sessions and term dates.</Text></View>
+          <Pressable onPress={() => openEditor('Add Academic Session', [{ key: 'year', label: 'Academic Session', value: '2026/2027' }, { key: 'start', label: 'Start', value: 'September 2026' }, { key: 'end', label: 'End', value: 'August 2027' }], 'session')} style={{ borderWidth: 1, borderColor: '#D5E0E9', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#FFFFFF' }}>
+            <Plus size={15} color="#274968" /><Text style={{ color: '#274968', fontSize: 10, fontWeight: '700' }}>Add Session</Text>
+          </Pressable>
+        </View>
+        {/* Session panel */}
+        <View style={{ borderWidth: 1, borderColor: '#E0E8EF', borderRadius: 6, padding: 11 }}>
+          <Pressable onPress={() => setSessionExpanded(!sessionExpanded)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingBottom: 11 }}>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>2025/2026</Text>
+                <View style={{ backgroundColor: '#DDF5E8', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: '#08754F', fontSize: 9, fontWeight: '700' }}>Current Session</Text></View>
+              </View>
+              <Text style={{ color: '#6C83A0', fontSize: 10, marginTop: 4 }}>Academic year: September 2025 – August 2026</Text>
+            </View>
+            {sessionExpanded ? <ChevronUp size={17} color="#45698D" /> : <ChevronDown size={17} color="#45698D" />}
+          </Pressable>
+          {sessionExpanded && (
+            <View style={{ borderWidth: 1, borderColor: '#E3EAF0', borderRadius: 6, overflow: 'hidden' }}>
+              <View style={{ flexDirection: 'row', backgroundColor: '#F0F3F5', paddingVertical: 8, paddingHorizontal: 14 }}>
+                {['Term', 'Start Date', 'End Date', 'Status', 'Actions'].map((h, i) => <Text key={h} style={{ flex: i === 0 ? 1.2 : i === 4 ? 1.05 : 1.15, fontSize: 9, fontWeight: '800', color: '#334F6E' }}>{h}</Text>)}
+              </View>
+              {filteredTerms.map(term => (
+                <View key={term.id} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                  <Text style={{ flex: 1.2, fontSize: 10, fontWeight: '600', color: '#405D7D' }}>{term.name}</Text>
+                  <Text style={{ flex: 1.15, fontSize: 10, color: '#405D7D' }}>{term.startDate}</Text>
+                  <Text style={{ flex: 1.15, fontSize: 10, color: '#405D7D' }}>{term.endDate}</Text>
+                  <View style={{ flex: 1.15 }}><View style={{ backgroundColor: term.status === 'Active' ? '#D9F4E6' : '#DFECFF', borderRadius: 12, paddingHorizontal: 11, paddingVertical: 4, alignSelf: 'flex-start' }}><Text style={{ color: term.status === 'Active' ? '#08754F' : '#236FD0', fontSize: 9, fontWeight: '700' }}>{term.status}</Text></View></View>
+                  <View style={{ flex: 1.05, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Pressable onPress={() => openEditor(`Edit ${term.name}`, [{ key: 'name', label: 'Term Name', value: term.name }, { key: 'startDate', label: 'Start Date', value: term.startDate }, { key: 'endDate', label: 'End Date', value: term.endDate }, { key: 'status', label: 'Status', value: term.status }], `term:${term.id}`)} style={{ height: 27, minWidth: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 5 }}>
+                      <Pencil size={12} color="#274968" /><Text style={{ color: '#274968', fontSize: 9, fontWeight: '600' }}>Edit</Text>
+                    </Pressable>
+                    <Pressable onPress={() => show(`${term.name}: ${term.startDate} → ${term.endDate} (${term.status})`, 'info')}><MoreVertical size={16} color="#244666" /></Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Grading Scale */}
+      <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE7EE', borderRadius: 8, padding: 15 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 11 }}>
+          <View style={{ flex: 1 }}><Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Grading Scale</Text><Text style={{ color: '#6A83A0', fontSize: 11, marginTop: 5 }}>Manage grading boundaries and credit status.</Text></View>
+          <Pressable onPress={() => openEditor('Edit Grading Scale', grades.flatMap(g => [{ key: `${g.grade}_min`, label: `${g.grade} Min %`, value: g.min }, { key: `${g.grade}_max`, label: `${g.grade} Max %`, value: g.max }, { key: `${g.grade}_remark`, label: `${g.grade} Remark`, value: g.remark }]), 'grades')} style={{ borderWidth: 1, borderColor: '#D5E0E9', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#FFFFFF' }}>
+            <Pencil size={15} color="#274968" /><Text style={{ color: '#274968', fontSize: 10, fontWeight: '700' }}>Edit Grading</Text>
+          </Pressable>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={{ minWidth: 800 }}>
+            <View style={{ flexDirection: 'row', backgroundColor: '#F0F3F5', paddingVertical: 7, paddingHorizontal: 15 }}>
+              {['Grade', 'Description', 'Min %', 'Max %', 'Remark', 'Credit'].map((h, i) => <Text key={h} style={{ flex: [0.7, 1.1, 1.45, 1.55, 2.0, 1.0][i], fontSize: 9, fontWeight: '800', color: '#334F6E' }}>{h}</Text>)}
+            </View>
+            {grades.map(g => (
+              <View key={g.grade} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                <Text style={{ flex: 0.7, fontSize: 10, fontWeight: '700', color: '#405D7D' }}>{g.grade}</Text>
+                <Text style={{ flex: 1.1, fontSize: 10, color: '#405D7D' }}>{g.description}</Text>
+                <Text style={{ flex: 1.45, fontSize: 10, color: '#405D7D' }}>{g.min}</Text>
+                <Text style={{ flex: 1.55, fontSize: 10, color: '#405D7D' }}>{g.max}</Text>
+                <Text numberOfLines={1} style={{ flex: 2.0, fontSize: 10, color: '#405D7D' }}>{g.remark}</Text>
+                <View style={{ flex: 1.0 }}><View style={{ backgroundColor: g.credit ? '#D9F4E6' : '#FFE1E1', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: g.credit ? '#08754F' : '#D92E32', fontSize: 9, fontWeight: '700' }}>{g.credit ? 'Credit' : 'No Credit'}</Text></View></View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* Edit Modal */}
+      <Modal visible={editModal.visible} transparent animationType="fade" onRequestClose={() => setEditModal(c => ({ ...c, visible: false }))}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(8,25,38,0.45)', alignItems: 'center', justifyContent: 'center', padding: 20 }} onPress={() => setEditModal(c => ({ ...c, visible: false }))}>
+          <View style={{ width: '100%', maxWidth: 520, maxHeight: '85%', backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }} onPress={(e: any) => e.stopPropagation()}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <Text style={{ color: '#142F4D', fontSize: 17, fontWeight: '800', flex: 1 }}>{editModal.title}</Text>
+              <Pressable onPress={() => setEditModal(c => ({ ...c, visible: false }))}><X size={19} color="#45698D" /></Pressable>
+            </View>
+            <ScrollView style={{ maxHeight: 380 }} keyboardShouldPersistTaps="handled">
+              {editModal.fields.map(f => (
+                <View key={f.key} style={{ marginBottom: 14 }}>
+                  <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>{f.label}</Text>
+                  <TextInput value={String(editValues[f.key] ?? '')} onChangeText={v => setEditValues(curr => ({ ...curr, [f.key]: v }))} placeholder={f.placeholder || f.label} placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                </View>
+              ))}
+            </ScrollView>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+              <Pressable onPress={() => setEditModal(c => ({ ...c, visible: false }))} style={{ paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6 }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={saveEditor} style={{ backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}><Check size={15} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Save Changes</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </ScrollView>
+  );
+}
 
 export default function App() {
   const { width } = useWindowDimensions();
@@ -159,7 +351,10 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — max-width centered for very wide screens like 1920px */}
+          {/* CONTENT — switches between Dashboard and School Configuration */}
+          {active === 'School Configuration' ? (
+            <SchoolConfigScreen search={search} show={show} />
+          ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
             <View style={{ flexDirection: narrow ? 'column' : 'row', justifyContent: 'space-between', alignItems: narrow ? 'flex-start' : 'center', marginBottom: 20, gap: narrow ? 12 : 0 }}>
@@ -255,6 +450,7 @@ export default function App() {
               </View>
             </View>
           </ScrollView>
+          )}
         </View>
 
         {/* BATCH MODAL */}
