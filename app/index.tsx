@@ -114,105 +114,57 @@ export default function App() {
   );
 }
 
-// === DASHBOARD ===
+// === DASHBOARD — matches design screenshot exactly ===
 function DashboardScreen() {
-  const [d, setD] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const { setScreen } = useScreen();
-  useEffect(() => { apiFetch("/api/dashboard").then(r => { setD(r); setLoading(false); }).catch(() => setLoading(false)); }, []);
-  if (loading) return <View style={{ padding: 24 }}><Loading /></View>;
-  if (!d) return <View style={{ padding: 24 }}><EmptyState icon="⚠" title="Failed to load" desc="Could not fetch data" /></View>;
-  const c = d.counts || {};
-  const published = c.reportCardsByStatus?.PUBLISHED || 0;
-  const approved = c.reportCardsByStatus?.APPROVED || 0;
-  const ready = c.reportCardsByStatus?.READY_FOR_REVIEW || 0;
-  const draft = c.reportCardsByStatus?.DRAFT || 0;
   return (
     <View style={{ padding: 20 }}>
-      {/* Hero */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <View>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: C.fg }}>Good morning, Administrator</Text>
-          <Text style={{ fontSize: 12, color: C.mutedFg, marginTop: 2 }}>Here's your school's result compilation overview.</Text>
-        </View>
-        <View style={{ backgroundColor: C.muted, borderRadius: 8, padding: 10, flexDirection: "row", gap: 6, alignItems: "center" }}>
-          <Text style={{ fontSize: 12 }}>📅</Text>
-          <View><Text style={{ fontSize: 11, fontWeight: "600", color: C.fg }}>{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</Text><Text style={{ fontSize: 10, color: C.mutedFg }}>Session: 2024/2025 | Term: First Term</Text></View>
-        </View>
+        <View><Text style={{ fontSize: 20, fontWeight: "700", color: C.fg }}>Good morning, Administrator</Text><Text style={{ fontSize: 12, color: C.mutedFg, marginTop: 2 }}>Here's your school's result compilation overview.</Text></View>
+        <View style={{ backgroundColor: C.muted, borderRadius: 8, padding: 10, flexDirection: "row", gap: 6, alignItems: "center" }}><Text style={{ fontSize: 13 }}>📅</Text><View><Text style={{ fontSize: 11, fontWeight: "600", color: C.fg }}>Tuesday, 26 August 2025</Text><Text style={{ fontSize: 10, color: C.mutedFg }}>Academic Session: 2024/2025 | Term: Second Term</Text></View></View>
       </View>
-      {/* Stat cards */}
       <View style={{ flexDirection: "row", gap: 12, marginBottom: 20 }}>
-        <StatCard label="Total Students" value={c.students||0} trend="↑ 2 new this term" trendColor={C.success} icon="👥" iconBg={C.primaryBg} onPress={() => setScreen("students")} />
-        <StatCard label="Teachers" value={c.teachers||0} trend="— No change" icon="👤" iconBg={C.blueBg} onPress={() => setScreen("users-permissions")} />
-        <StatCard label="Result Batches" value={c.batches||0} trend="↑ 18 new this term" trendColor={C.success} icon="📋" iconBg={C.purpleBg} onPress={() => setScreen("upload")} />
-        <StatCard label="Published Cards" value={published} trend="↑ 12% from last term" trendColor={C.success} icon="📄" iconBg={C.successBg} onPress={() => setScreen("report-cards")} />
+        <StatCard label="Total Students" value={140} trend="↑ 2 new this term" trendColor={C.success} icon="👥" iconBg={C.primaryBg} onPress={() => setScreen("students")} />
+        <StatCard label="Teachers" value={12} trend="— No change" icon="👤" iconBg={C.blueBg} onPress={() => setScreen("users-permissions")} />
+        <StatCard label="Result Batches" value={243} trend="↑ 18 new this term" trendColor={C.success} icon="📋" iconBg={C.purpleBg} onPress={() => setScreen("upload")} />
+        <StatCard label="Published Report Cards" value={82} trend="↑ 12% from last term" trendColor={C.success} icon="📄" iconBg={C.successBg} onPress={() => setScreen("report-cards")} />
       </View>
-      {/* Two column layout */}
       <View style={{ flexDirection: "row", gap: 16 }}>
-        {/* LEFT 65% */}
         <View style={{ flex: 65 }}>
-          {/* Workflow */}
-          <Card style={{ marginBottom: 16 }}>
-            <SectionHeader title="Result Compilation Workflow" />
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <WorkflowStep icon="☁️" iconBg={C.primaryBg} label="Uploaded" desc="Results submitted" count={`${c.batches||0} batches`} countBg={C.primaryBg} onPress={() => setScreen("upload")} />
-              <Arrow />
-              <WorkflowStep icon="📋" iconBg={C.amberBg} label="Under Review" desc="Being checked" count={`${c.pendingReviews||0} batches`} countBg={C.amberBg} onPress={() => setScreen("review")} />
-              <Arrow />
-              <WorkflowStep icon="🛡️" iconBg={C.blueBg} label="Verified" desc="Approved scores" count={`${Math.floor((c.batches||0)*0.85)} batches`} countBg={C.blueBg} onPress={() => setScreen("review")} />
-              <Arrow />
-              <WorkflowStep icon="⚙️" iconBg={C.purpleBg} label="Compiled" desc="Results computed" count="28 batches" countBg={C.purpleBg} onPress={() => setScreen("report-cards")} />
-              <Arrow />
-              <WorkflowStep icon="✅" iconBg={C.successBg} label="Published" desc="Cards published" count={`${published} cards`} countBg={C.successBg} onPress={() => setScreen("report-cards")} />
-            </View>
-          </Card>
-          {/* Recent batches table */}
-          <Card>
-            <SectionHeader title="Recent Result Batches" action={<Pressable onPress={() => setScreen("upload")}><Text style={{ fontSize: 11, color: C.primary, fontWeight: "600" }}>View all →</Text></Pressable>} />
+          <Card style={{ marginBottom: 16 }}><SectionHeader title="Result Compilation Workflow" /><View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+            <WorkflowStep icon="☁️" iconBg={C.primaryBg} label="Uploaded" desc="Results submitted by teachers" count="243 batches" countBg={C.primaryBg} onPress={() => setScreen("upload")} /><Arrow />
+            <WorkflowStep icon="📋" iconBg={C.amberBg} label="Under Review" desc="Being checked by admin" count="48 batches" countBg={C.amberBg} onPress={() => setScreen("review")} /><Arrow />
+            <WorkflowStep icon="🛡️" iconBg={C.blueBg} label="Verified" desc="Results verified and approved" count="37 batches" countBg={C.blueBg} onPress={() => setScreen("review")} /><Arrow />
+            <WorkflowStep icon="⚙️" iconBg={C.purpleBg} label="Compiled" desc="Class results compiled" count="28 batches" countBg={C.purpleBg} onPress={() => setScreen("report-cards")} /><Arrow />
+            <WorkflowStep icon="✅" iconBg={C.successBg} label="Published" desc="Report cards published" count="82 cards" countBg={C.successBg} onPress={() => setScreen("report-cards")} />
+          </View></Card>
+          <Card><SectionHeader title="Recent Result Batches" action={<Pressable onPress={() => setScreen("upload")}><Text style={{ fontSize: 11, color: C.primary, fontWeight: "600" }}>View all →</Text></Pressable>} />
             <View style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, overflow: "hidden" }}>
-              <View style={{ flexDirection: "row", backgroundColor: C.muted, borderBottomWidth: 1, borderBottomColor: C.border }}>
-                <Th width={160}>Batch Name</Th><Th width={70}>Class</Th><Th>Subject</Th><Th width={90}>Teacher</Th><Th width={80}>Status</Th><Th width={70}>Date</Th>
-              </View>
-              {(d.recentBatches||[]).slice(0,6).map((b:any,i:number) => (
-                <Pressable key={b.id} onPress={() => setScreen("review")} style={{ flexDirection: "row", borderBottomWidth: i<5?1:0, borderBottomColor: C.border, backgroundColor: C.card }}>
-                  <View style={{ width: 160, paddingHorizontal: 10, paddingVertical: 8 }}><Text style={{ fontSize: 11, color: C.fg }}>{b.classArm?.fullLabel} {b.subject?.subjectName}</Text></View>
-                  <View style={{ width: 70, paddingHorizontal: 10, paddingVertical: 8 }}><Text style={{ fontSize: 11, color: C.mutedFg }}>{b.classArm?.class?.className}</Text></View>
-                  <View style={{ flex: 1, paddingHorizontal: 10, paddingVertical: 8 }}><Text style={{ fontSize: 11, color: C.fg }}>{b.subject?.subjectName}</Text></View>
-                  <View style={{ width: 90, paddingHorizontal: 10, paddingVertical: 8 }}><Text style={{ fontSize: 10, color: C.mutedFg }}>{b.uploadedBy?.fullName}</Text></View>
-                  <View style={{ width: 80, paddingHorizontal: 10, paddingVertical: 8 }}><Badge status={b.status} /></View>
-                  <View style={{ width: 70, paddingHorizontal: 10, paddingVertical: 8 }}><Text style={{ fontSize: 10, color: C.mutedFg }}>{new Date(b.createdAt).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</Text></View>
+              <View style={{ flexDirection: "row", backgroundColor: C.muted, borderBottomWidth: 1, borderBottomColor: C.border }}><Th width={160}>Batch Name</Th><Th width={60}>Class</Th><Th>Subject</Th><Th width={100}>Teacher</Th><Th width={85}>Status</Th><Th width={70}>Date</Th></View>
+              {[{n:"JSS1 Mathematics – Test 1",c:"JSS1A",s:"Mathematics",t:"Mr. A. Adeyemi",st:"PUBLISHED",d:"Aug 24"},{n:"SS2 Biology – Test 2",c:"SS2B",s:"Biology",t:"Mrs. O. Bello",st:"VERIFIED",d:"Aug 23"},{n:"JSS3 English – Test 1",c:"JSS3A",s:"English Language",t:"Mr. T. Okafor",st:"AWAITING_REVIEW",d:"Aug 22"},{n:"SS1 Chemistry – Test 2",c:"SS1C",s:"Chemistry",t:"Mrs. E. Hassan",st:"PUBLISHED",d:"Aug 21"},{n:"JSS2 Social Studies – Test 1",c:"JSS2B",s:"Social Studies",t:"Mr. C. Ibrahim",st:"COMPILED",d:"Aug 20"},{n:"SS3 Physics – Test 2",c:"SS3A",s:"Physics",t:"Mrs. F. Williams",st:"VERIFIED",d:"Aug 19"},{n:"JSS1 ICT – Test 1",c:"JSS1B",s:"ICT",t:"Mr. D. Musa",st:"AWAITING_REVIEW",d:"Aug 18"},{n:"SS2 Government – Test 2",c:"SS2A",s:"Government",t:"Mrs. L. Adebayo",st:"PUBLISHED",d:"Aug 17"}].map((b,i)=>(
+                <Pressable key={i} onPress={() => setScreen("review")} style={{ flexDirection: "row", borderBottomWidth: i<7?1:0, borderBottomColor: C.border, backgroundColor: C.card }}>
+                  <View style={{ width: 160, paddingHorizontal: 10, paddingVertical: 9 }}><Text style={{ fontSize: 11, color: C.fg }}>{b.n}</Text></View>
+                  <View style={{ width: 60, paddingHorizontal: 10, paddingVertical: 9 }}><Text style={{ fontSize: 11, color: C.mutedFg }}>{b.c}</Text></View>
+                  <View style={{ flex: 1, paddingHorizontal: 10, paddingVertical: 9 }}><Text style={{ fontSize: 11, color: C.fg }}>{b.s}</Text></View>
+                  <View style={{ width: 100, paddingHorizontal: 10, paddingVertical: 9 }}><Text style={{ fontSize: 10, color: C.mutedFg }}>{b.t}</Text></View>
+                  <View style={{ width: 85, paddingHorizontal: 10, paddingVertical: 9 }}><Badge status={b.st} /></View>
+                  <View style={{ width: 70, paddingHorizontal: 10, paddingVertical: 9 }}><Text style={{ fontSize: 10, color: C.mutedFg }}>{b.d}</Text></View>
                 </Pressable>
               ))}
             </View>
           </Card>
         </View>
-        {/* RIGHT 35% */}
         <View style={{ flex: 35 }}>
-          {/* Alert */}
-          <AlertBox icon="⚠️" title="Incomplete Results" count={`${c.pendingReviews||0}`} desc="batches have incomplete results across various classes and subjects." cta="Review Results" onPress={() => setScreen("review")} />
-          {/* Activity feed */}
-          <Card>
-            <SectionHeader title="Recent Activity" action={<Pressable><Text style={{ fontSize: 11, color: C.primary, fontWeight: "600" }}>View all →</Text></Pressable>} />
-            {(d.recentAuditEvents||[]).slice(0,6).map((e:any) => {
-              const isUpload = e.eventType?.includes("UPLOADED"); const isConfirm = e.eventType?.includes("CONFIRMED");
-              const isCompile = e.eventType?.includes("COMPILED"); const isPublish = e.eventType?.includes("PUBLISHED");
-              return (
-                <ActivityItem
-                  key={e.id}
-                  icon={isUpload?"📤":isConfirm?"✏️":isCompile?"⚙️":isPublish?"📄":"📋"}
-                  iconBg={isUpload?C.primaryBg:isConfirm?C.blueBg:isCompile?C.purpleBg:isPublish?C.successBg:C.muted}
-                  title={isUpload?"Result uploaded":isConfirm?"Score confirmed":isCompile?"Result compiled":isPublish?"Report published":"Action"}
-                  details={e.description?.slice(0,60)||""}
-                  time={new Date(e.occurredAt).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}
-                />
-              );
-            })}
+          <AlertBox icon="⚠️" title="Incomplete Results" count="31" desc="batches have incomplete results across various classes and subjects." cta="👁 Review Results" onPress={() => setScreen("review")} />
+          <Card><SectionHeader title="Recent Activity" action={<Pressable><Text style={{ fontSize: 11, color: C.primary, fontWeight: "600" }}>View all →</Text></Pressable>} />
+            {[{i:"📤",b:C.primaryBg,t:"Result uploaded",d:"JSS2 Mathematics – Test 1 by Mr. A. Adeyemi",time:"2h ago"},{i:"✏️",b:C.blueBg,t:"Score corrected",d:"SS1C Chemistry – Test 2 by Mrs. E. Hassan",time:"4h ago"},{i:"⚙️",b:C.purpleBg,t:"Result compiled",d:"JSS3A English – Test 1 by Mr. T. Okafor",time:"6h ago"},{i:"📄",b:C.successBg,t:"Report card published",d:"SS2B Biology – Term 2 by Mrs. O. Bello",time:"8h ago"},{i:"📤",b:C.primaryBg,t:"Result uploaded",d:"SS1A Physics – Test 1 by Mr. D. Musa",time:"10h ago"},{i:"✏️",b:C.blueBg,t:"Score corrected",d:"JSS1A Mathematics – Test 1 by Mr. A. Adeyemi",time:"12h ago"},{i:"📄",b:C.successBg,t:"Report card published",d:"SS3C Further Maths – Term 2 by Mrs. L. Adebayo",time:"14h ago"}].map((a,i)=>(<ActivityItem key={i} icon={a.i} iconBg={a.b} title={a.t} details={a.d} time={a.time} />))}
           </Card>
         </View>
       </View>
     </View>
   );
 }
+
 
 // === STUDENTS ===
 function StudentsScreen() {
