@@ -1,0 +1,369 @@
+# Result Compilation Web App — Consolidated Plan (Parts 1–3)
+
+## 1. Goal
+
+Build a focused web app for compiling Nigerian secondary-school students’ termly results and presenting complete report cards.
+
+This phase covers **the data layer and the frontend UI layer only**. The data layer comes first because the frontend must be designed around a coherent, realistic data model.
+
+This plan consolidates:
+- **Part 1:** Product scope, Nigerian school research, data-model requirements, and demo-data plan.
+- **Part 2:** Previous database/seed-data build, mature visual direction, nine screens, and reported verification.
+- **Part 3:** Requirement that the entire frontend be interactive even though the business and functionality layers are out of scope.
+
+## 2. Agreed Scope
+
+### In scope
+- Research relevant Nigerian secondary-school structures and result-reporting conventions.
+- Design and review the data model, entities, relationships, and constraints.
+- Create realistic, fictional Nigerian demo data.
+- Build a mature, polished UI across all nine core screens.
+- Make **all frontend interactions work** using local UI state and demo data.
+- Represent meaningful empty, populated, draft, incomplete, review, approved, and published states.
+- Verify the screens and interactions in the current project.
+
+### Out of scope
+- **Business logic:** implementing actual score calculations, grading, averages, ranking, or other result rules.
+- **Backend functionality:** real spreadsheet imports, OCR/AI extraction, database write workflows, real approval/publishing workflows, and actual PDF generation.
+- **System layer:** authentication, deployment, and system-level permission enforcement.
+- UX is not to be built as a separate layer in this phase, but the frontend must still have clear, usable interaction behavior.
+
+### Critical distinction
+**“No functionality layer” does not mean “static frontend.”** The UI must respond to clicks and input. Use local component state and seeded data to simulate actions. The UI can show a success/error toast or update the current view locally, but it must not imply that an out-of-scope operation actually persisted or ran on the backend.
+
+## 3. Part 5: Source Input Editing and Immutable Compiled Outputs
+
+Part 5 clarifies the central data principle: **inputs are editable; compiled outputs are not directly editable.** The uploaded/source data is the authoritative place to correct mistakes. Report cards, compilation results, grades, and class positions are derived outputs.
+
+### Upload workflow: upload → preview/edit → confirm
+- Uploading a spreadsheet or scanned PDF must not immediately make its extracted records final.
+- After selecting the source type, class arm, subject, and file, the user starts the simulated extraction step.
+- Show a preview/edit stage containing the extracted or demo-extracted rows before confirmation.
+- Every relevant extracted field must be editable in the preview, including score cells, student matching, and any other extracted source fields represented by the input format.
+- Allow removal of bogus/duplicate rows and correction of OCR/extraction mistakes.
+- Show counts for total rows, unmatched students, invalid values, and uncertain values where applicable.
+- Visually flag invalid or uncertain values. The Confirm action should be disabled while unresolved unmatched students or invalid scores remain, according to the prototype's stated validation rules.
+- Only the explicit Confirm action transitions the batch out of the draft/review stage. The UI must distinguish simulated extraction and local demo-state changes from real OCR, import, or database persistence.
+- The same review principle applies to spreadsheet and scanned-PDF sources; scanned PDFs are especially likely to need OCR correction.
+
+### Corrections after confirmation
+- Previously confirmed/uploaded source scores remain revisable when a mistake is discovered later.
+- The revision interface must identify the student, subject, assessment component, maximum mark, original batch/source reference, confirmation context, and any previous correction information available.
+- Require a reason for revision. Validate that the new value is within the configured maximum and is different from the current value.
+- Preserve the old value and revision provenance in the data model rather than silently overwriting history.
+- The UI may show the expected recomputation cascade, but must not claim backend recalculation has happened if only a prototype action occurred.
+
+### Source data versus derived output
+**Editable source/input records include:**
+- Uploaded score records and verified scores.
+- Student records and class membership.
+- Assessment configurations and component maximums.
+- Grading boundaries.
+- Teacher assignments and other relevant configuration inputs.
+
+**Read-only derived outputs include:**
+- Report-card subject results.
+- Compilation results such as CA total, exam score, overall total, and grade.
+- Class positions and subject positions within an arm.
+- The report-card compiled result itself.
+
+The report-card preview must not expose edit controls for compiled subject results, totals, grades, or positions. If a teacher finds a wrong value or position, they must navigate to the underlying source record, correct that input, and recompile. Teacher-entered report-card fields—such as attendance, affective traits, and teacher/principal comments—may be editable only if the product explicitly models them as independent inputs; they must not be confused with compiled score outputs.
+
+### Recompilation and downstream impact
+A source-score revision can affect other students because class positions are relative. The intended workflow must account for:
+1. Recalculating the affected subject result from the revised source score and the applicable assessment configuration.
+2. Recomputing class positions for all affected students in the relevant arm, not just the student whose score changed.
+3. Recomputing subject positions where used.
+4. Marking an existing report-card version as superseded and producing a new compiled version.
+5. Keeping an audit trail of the original value, new value, reason, source batch, and revision event.
+
+For this phase, these are **data and UI workflow requirements**. Actual calculation, transactional persistence, rank recomputation, and report-card version generation remain out of scope unless the project scope is explicitly changed.
+
+## 4. Research and Nigerian School Conventions
+
+Research and document relevant conventions. Distinguish source-backed findings from assumptions and configurable choices.
+
+- **Curriculum and subjects:** JSS 1–3 and SS 1–3. Use NERDC references as a starting point, with configurable subject offerings. Represent senior-secondary Science, Arts, and Commercial tracks where applicable.
+- **School structure:** academic sessions, terms, classes, class arms, and applicable tracks.
+- **Assessment structure:** the product’s agreed model is CA up to 40 marks and an examination up to 60 marks, for a total of 100. CA subcomponents are configurable; examples include 5+5+5+5+20 and 10+10+10+10.
+- **Grading:** research common school grading and report-card conventions. Do not assume every school uses the same scheme or that WAEC grades are automatically the internal term-result grading scheme.
+- **Report cards:** identify common fields while allowing school-specific configuration.
+- **Admission numbers:** use plausible school-defined identifiers, not a claimed national standard.
+- **Names:** use varied fictional Nigerian names; do not use real students’ personal records.
+- **Scores:** use plausible distributions. Distinguish zero, blank, absent, unreadable, and not-yet-entered values.
+
+Document which choices are supported by research and which are demo assumptions.
+
+## 5. Demo School and Data
+
+Use **Akoka Federal Academy, Lagos** as the provisional fictional demo school from the previous build. This is a demo identity, not a claim about a real school.
+
+Part 2 reported these seeded counts:
+- 1 school.
+- 2 academic sessions and 6 terms.
+- 6 classes and 15 class arms.
+- 32 subjects and 243 class-subject assignments.
+- 13 users and 258 teacher assignments.
+- 140 fictional students with names drawn from four Nigerian ethnicity/name pools.
+- 243 assessment configurations and 1,113 assessment components.
+- 243 score batches, 10,208 score drafts, and 9,132 verified scores.
+- 2,266 compilation-result records, including 273 incomplete records.
+- 140 class-position records.
+- 140 report cards: 82 published, 23 approved, 15 ready for review, and 20 draft.
+- 685 audit events.
+
+These are **reported results from Part 2**, not independently verified facts about the current project. Inspect the current repository, schema, seed scripts, and database before relying on the counts. Part 1 proposed approximately 150 students; Part 2 reported 140. Prefer the existing coherent dataset if it is present and suitable rather than changing the count just to match the earlier estimate.
+
+The seed data should include representative states for UI exploration: confirmed batches, batches awaiting review, incomplete results, invalid/uncertain/unmatched drafts, manually corrected scores with traceability, and report cards across DRAFT, READY_FOR_REVIEW, APPROVED, and PUBLISHED states.
+
+## 6. Data Model
+
+Review the actual existing model before adding or changing entities. Part 2 reported a Prisma schema with the original model entities plus `SubjectTrack`, `StudentClassMembership`, and `ClassPosition`.
+
+### School structure
+- School
+- Academic session
+- Term
+- Class/level
+- Class arm
+- Subject
+- Subject track
+- Class-subject assignment
+
+### People and membership
+- Student
+- Student class membership by academic period
+- User
+- Role
+- Teacher assignments distinguishing form-teacher responsibility from subject-teaching assignments
+
+### Assessment and score data
+- Assessment configuration, versioned where needed
+- Assessment components, including configurable CA subcomponents and examination
+- Score submission/import batch
+- Score draft
+- Verified score
+- Grading boundaries and grade remarks, as appropriate
+
+### Compiled result and traceability data
+- Compilation/result record
+- Report card
+- Class-position record if required to represent a displayed position
+- Audit/lineage event for source and change history
+
+Review entity meanings, relationships, cardinalities, uniqueness, nullable values, historical references, and data constraints against the product requirements. Do not assume the previous schema is correct merely because the seed ran.
+
+## 7. Data Integrity and Provenance
+
+The model and demo records should support:
+- Stable school-level student identifiers; never rely on names or row order alone for identity.
+- Student membership tied to the relevant class/arm and academic period.
+- Configurable subjects by class and, where relevant, track.
+- Variable CA components capped at 40; exam maximum 60; combined maximum 100.
+- Configured maximum marks stored for each component.
+- Separate representations for zero, blank, absent, unreadable, and not-yet-entered scores.
+- Draft scores distinct from verified scores.
+- Source/import-batch references and manual-correction provenance where applicable.
+- Assessment-configuration versions linked to results that used them.
+- Internally consistent foreign-key references and seed records.
+- Invalid, uncertain, unmatched, incomplete, and corrected examples to populate UI states.
+
+These are data-model requirements. Implementing calculations, imports, approvals, or enforcement workflows is out of scope.
+
+## 8. Data Transformation Design
+
+Spreadsheet input and scanned paper-sheet input should eventually map to one canonical score representation.
+
+Conceptual data path:
+1. School and assessment configuration define the expected class, subject, roster, and score components.
+2. Each incoming record is associated with its source/import batch.
+3. Values are normalized to a consistent representation.
+4. Student and assessment-component references are matched to canonical records.
+5. Draft records preserve source information and uncertainty.
+6. Confirmed scores are represented separately from drafts.
+7. Result and report-card records reference the appropriate student, subject, term, assessment configuration, and source score data.
+
+This phase designs the data structures and relationships for the path. It does not implement spreadsheet importing, OCR/AI extraction, calculation workflows, approvals, or PDF generation.
+
+## 9. Visual Design Direction
+
+Part 2 chose a **mature, Linear-inspired admin dashboard**:
+- Warm neutral surfaces with a deep emerald accent.
+- Inter typography and tabular figures for numeric content.
+- Light and dark themes.
+- Persistent app shell with sidebar and sticky header.
+- Consistent UI primitives such as page headers, status badges, dialogs, toasts, and empty states.
+- Data-rich tables, summary cards, detail panels, status indicators, and a report-card preview.
+
+Carry this visual direction forward unless the user explicitly changes it. Before implementation, inspect mature dashboard templates/references and adapt the chosen direction to the school-result product rather than blindly copying a generic starter template. The result should feel polished, professional, calm, and cohesive.
+
+## 10. Core Screens
+
+The app currently uses one `/` route with client-side navigation because the sandbox preview exposes only that route. Treat this as **one URL route, not one page of UI**. The target is 10 navigable screens, plus drill-down views and dialogs. Do not add URL routes unless the environment supports and the user requests them.
+
+1. **Dashboard:** summary cards, workflow overview, incomplete-result indicators, recent batches, and activity examples.
+2. **School Configuration:** school identity, sessions/terms, and grading settings as represented data.
+3. **Subjects & Classes:** classes, arms, subject library, tracks, and class-subject assignments.
+4. **Students:** searchable student table, filters, pagination, and student detail view.
+5. **Assessment Configuration:** configurations and CA components under the 40/60 model.
+6. **Users & Permissions:** user details and distinct form-teacher versus subject-teacher assignments. System-level permission enforcement is out of scope.
+7. **Upload Results:** source-type indicators, batch list, search/filter, and upload dialog simulated in the UI.
+8. **Review & Compile:** draft/uncertain/incomplete examples, draft detail/edit dialog, and audit trail represented with demo data.
+9. **Report Cards:** searchable/filterable/paginated list and detailed print-style preview with status-aware actions.
+10. **Settings (added in Part 4):** General, Notifications, Security, and Audit Log tabs. These are prototype settings backed by local/demo state; they do not implement real authentication, security enforcement, or persisted system configuration.
+
+**Drill-down views:** Report Card Preview, Batch Detail (drafts/verified scores plus audit trail), and Student Detail Panel. These render within their parent screens rather than needing separate routes. The previous build reported approximately 15 modals/dialogs; inspect the actual app before assuming that exact count.
+
+## 11. Mandatory Frontend Interactivity
+
+**Every visible interactive UI element must do something appropriate.** A static mockup with decorative buttons does not meet the requirement.
+
+### Global shell
+- Sidebar navigation changes the displayed screen.
+- Theme toggle switches between light and dark modes.
+- Header command palette opens with Cmd/Ctrl+K, filters destinations as the user types, and navigates when selected.
+- Notifications control opens a dropdown; notification items respond by navigating to relevant seeded records/screens.
+- User menu opens and its items respond appropriately within the prototype.
+
+### Search, filters, and lists
+- Search fields filter the visible demo records by relevant fields.
+- Filter dropdowns change the displayed results.
+- Pagination controls—first, previous, next, last—change the displayed page and respect result counts.
+- Sort controls, if shown, actually sort the displayed rows.
+- Clickable rows/cards open the corresponding detail view or panel.
+- Expandable class/arm rows open and close.
+- Empty states appear when filters return no results and provide a meaningful way back.
+
+### Modals, dialogs, and forms
+- Add/edit/detail buttons open the correct modal, dialog, drawer, or detail panel.
+- Inputs, dropdowns, selectors, tabs, and file pickers respond to user input.
+- Required-field states and disabled/enabled controls respond to local form state where appropriate.
+- Close, cancel, and back actions work.
+- Confirmation dialogs appear before simulated consequential actions.
+- Forms may update local UI state or show an explicit simulation toast; do not claim data was persisted unless it was.
+- A simulated upload modal may allow selecting a file and showing its name/type, but it must not claim that a real import or extraction occurred.
+
+### Screen-specific examples
+- **Dashboard:** upload dialog opens; batch rows and workflow cards navigate to related views.
+- **School Configuration:** edit-school, add-session, add-term, edit-session, and edit-grading-boundary dialogs open and accept input. Every visible edit control must work.
+- **Subjects & Classes:** search filters subjects; class cards expand; subject rows open details; add-subject dialog works locally; subject detail supports View/Edit modes and editable code, name, category, track, class-level applicability, and core-subject status.
+- **Students:** debounced search, class-arm filter, pagination, add/edit student dialogs, detail panel, and generate-report-card confirmation work with demo state. The student edit form opens with fields prefilled; the detail panel has an explicit View report card action.
+- **Assessment Configuration:** cards open detail dialogs; every CA component can be edited and deleted; the Add component form accepts a name and max mark, validates required input and remaining CA capacity, and displays success/error feedback. Support unsaved-change indicators, Save all changes, and Close without saving. This remains local UI simulation, not the full scoring business logic.
+- **Users & Permissions:** user details open; Edit user opens a prefilled form for full name, email, phone, role, and active status; add-user and add-assignment forms respond to input and provide feedback.
+- **Upload Results:** search, status filter, pagination, batch detail navigation, source-type selection, and file-picker feedback work. Upload proceeds to an editable preview stage before confirmation; the file picker alone must not complete the upload.
+- **Review & Compile:** search and issue filters work; draft rows open a complete edit dialog with student-match options (matched/reassign/unmatched), student search for reassignment, score, missing/uncertain flags, and reviewer note. Reject, Save changes, and Confirm with value show appropriate confirmation/feedback. This screen remains available for batches already saved as drafts and awaiting review.
+- **Report Cards:** search, status/arm filters, pagination, card preview, an explicit View report card button on each card, bulk-generate dialog, and status-aware actions work. Compiled subject results, totals, grades, and positions are read-only. The Edit underlying scores action navigates to the relevant student's source-score section and, where possible, opens or highlights the relevant source score for revision. Approve/publish actions show confirmations and update only local demo state. Print/PDF buttons must not falsely claim to generate a real PDF; they may open a print-style preview or explain that actual PDF generation is out of scope.
+- **Settings:** General tab exposes editable demo settings such as school name, year start, grading scale, language, timezone, and CA maximum; Notifications has four toggles; Security has three workflow toggles and session timeout; Audit Log displays recent demo events. These controls must be clickable and visibly reflect local state, without claiming real security or persistent configuration changes.
+
+### Feedback and state
+- Use toasts for simulated success/error feedback.
+- Show loading, empty, disabled, and error states where appropriate to the interaction.
+- Make interactive controls visually identifiable and keyboard accessible.
+- Ensure the UI does not imply backend persistence or real processing where none exists.
+
+## 11. Report-Card Preview Content
+
+Use the researched/configurable report-card model. Representative fields may include:
+- School identity, session, and term.
+- Student name, admission number, class, and arm.
+- Subject results and configured assessment components.
+- CA total, exam score, overall score, grade, and remark as seeded example values.
+- Position or average if included by the school model.
+- Attendance, affective/psychomotor traits, comments, and resumption date where applicable.
+
+Values may be seeded for display. Calculations, rankings, and actual PDF generation are not implemented in this phase.
+
+## 13. Part 4: Editing, Settings, and Interaction Fixes
+
+Part 4 adds the following requirements based on the reported user testing and fixes:
+
+- Add a **Settings** screen with four tabs: General, Notifications, Security, and Audit Log.
+- Make all configuration surfaces editable, not merely viewable: school settings, session and term dates, grading-boundary fields, subject details, assessment components, user details, and student details.
+- Make draft editing comprehensive: student matching/reassignment, score editing, missing/uncertain flags, and reviewer notes, with Reject, Save changes, and Confirm actions.
+- Make report-card preview easy to discover from both the student detail panel and the report-card list.
+- Ensure add/edit actions provide visible validation and feedback.
+- Fix the Assessment Configuration Add-component action so it works reliably inside the dialog; direct button handling may be used if form submission is unreliable.
+- Ensure toast notifications actually render. If the app uses Sonner's `toast.success/error/info`, mount Sonner's `Toaster`; a different Radix/shadcn Toaster alone does not display Sonner notifications.
+- Test empty submission (visible validation error), successful submission (visible success feedback and local list update), and Enter-key submission where supported.
+- Do not treat reported fixes as verified in the current codebase until reproduced in the current environment.
+
+These requirements are frontend editing and interaction behavior. They do not authorize implementation of real backend persistence or business workflows.
+
+## 14. Previous Build: Reported Technical State
+
+Part 2 reports that the previous environment:
+- Used SQLite with Prisma and replaced enums with documented string values for SQLite compatibility.
+- Created an 11-step foreign-key-safe seed pipeline, TypeScript domain types/helpers, Nigerian reference-data files, and reproducible seeded randomness.
+- Built a Next.js app with a Prisma-backed query layer and API routes.
+- Built all nine screens.
+- Fixed issues discovered during browser testing, including report-card queries and rendering.
+- Reported that the dashboard, student list, report-card preview, navigation, and both themes worked.
+- Reported that lint/typecheck passed and seed generation was deterministic/idempotent.
+
+Part 3 reports additional frontend interactions:
+- Command palette, notifications, and user menu.
+- Search/filter/pagination, detail panels, expandable rows, modals, forms, confirmation dialogs, and toasts across screens.
+- Browser checks of upload, student-add, search, bulk-generate, approve, draft-edit, command palette, user menu, and notifications interactions.
+- Lint passing.
+
+These are **historical reports from the previous environment**, not proof that the current rebuild contains the code or that every interaction works now. Inspect the current repository and test the actual running app. Reuse existing working implementation where available and avoid rebuilding it unnecessarily.
+
+## 15. Deliverables
+
+Adapt paths to the actual repository. Expected deliverables:
+- `research/nigerian-school-reference-data.md` — sources and clearly labelled assumptions.
+- `data-layer/data-model-design.md` — entities, relationships, constraints, and rationale.
+- Prisma schema if Prisma remains the chosen ORM.
+- TypeScript domain types matching data contracts.
+- Seed scripts and fictional Nigerian reference-data files.
+- A coherent seeded database.
+- Nine mature UI screens populated from the agreed data model.
+- Shared interaction primitives: modal/dialog, dropdown, toast, pagination, empty state, status badge, and other reused controls.
+- A verification checklist/report that records what was actually tested in the current environment.
+
+## 16. Work Order
+
+1. Inspect the current repository, project structure, database, and screens.
+2. Identify what from the previous build is present, missing, broken, or changed.
+3. Review Nigerian school research; separate sourced conventions from assumptions.
+4. Review and finalize the data model.
+5. Verify or repair the seed generator and data consistency.
+6. Review mature dashboard references and settle the visual direction.
+7. Build/refine all ten screens around the agreed data model, including the Settings tabs.
+8. Audit every visible control, especially every pencil/edit icon and Add button, for a working UI response.
+9. Test the complete upload → preview/edit → confirm flow for both spreadsheet and scanned-PDF source types using representative demo extraction data.
+10. Verify that preview rows/cells can be edited, student matches changed, bad rows removed, and invalid/uncertain/unmatched states displayed correctly before confirmation.
+11. Test post-confirmation source-score revision with required reason, max-mark validation, same-value validation, and preserved revision history.
+12. Verify the report-card preview has no edit controls for compiled scores, totals, grades, or positions; test navigation from the report card back to the underlying source score.
+13. Verify the UI communicates the expected recompilation impact on subject results, positions across the arm, and report-card versioning without claiming that out-of-scope backend work actually occurred.
+14. Test all editable forms with prefilled values, change/save/cancel behavior, validation, local list updates, and visible toast feedback.
+15. Test assessment component add/edit/delete, including the empty Add case and the successful Add case; verify CA-capacity feedback and Enter-key submission where supported.
+16. Test draft reassignment and score/note editing, student editing, subject editing, user editing, session/term editing, grading-boundary editing, Settings tabs/toggles, and report-card preview entry points.
+17. Test search, filters, pagination, navigation, modals, confirmations, dropdowns, toasts, report-card preview actions, and light/dark mode in the current environment.
+18. Report only checks actually performed; list any controls that remain intentionally simulated or unsupported.
+
+## 17. Completion Criteria
+
+- The data model represents school structure, students, subjects, assignments, assessments, score records, and report-card data needed by the UI.
+- Research-backed conventions are distinguished from configurable school choices and demo assumptions.
+- CA components can vary while respecting the 40-point CA maximum; examination maximum is 60.
+- Demo records are fictional, realistic, consistent, and rich enough to populate all screens and UI states.
+- Draft, verified, incomplete, uncertain, corrected, and report-card-status examples are represented where needed.
+- The visual design is mature, cohesive, and supports light and dark themes.
+- All ten screens, including Settings, are populated from a coherent data shape.
+- Every visible interactive control responds appropriately; there are no decorative buttons pretending to work.
+- Every visible edit icon opens a real edit interface; every Add button either performs the local UI action or shows a clear validation error.
+- Spreadsheet and scanned-PDF uploads both follow upload → preview/edit → confirm; neither source type becomes final immediately after file selection.
+- The upload preview exposes editable source rows/cells, student matching, row removal, and visible validation for invalid or uncertain values.
+- Previously confirmed source scores can be revised with a required reason and appropriate validation, while retaining revision provenance.
+- Report-card compiled outputs, compilation results, grades, and class/subject positions remain read-only; corrections are made to source inputs.
+- The expected recomputation cascade explicitly covers affected subject results, positions for the whole relevant arm, and superseding/replacing report-card versions.
+- Editable forms have sensible prefilled values where editing existing records, and support save/cancel behavior with clear local-state feedback.
+- Assessment component add/edit/delete and CA-capacity feedback are verified.
+- Draft editing supports student matching/reassignment, score, flags, and reviewer note.
+- Settings tabs and controls work as local prototype state.
+- Student detail and report-card list provide clear, working report-card preview entry points.
+- Toast success/error notifications visibly render; empty and successful Add cases are both tested.
+- Search, filters, pagination, dropdowns, modals, forms, confirmation dialogs, detail panels, theme switching, and simulated feedback are verified.
+- No UI action falsely claims that real imports, AI extraction, business calculations, database persistence, approval workflows, authentication, or PDF generation have been implemented.
+- Business logic, backend functionality, and system-layer work remain outside the agreed phase.
