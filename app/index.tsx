@@ -349,13 +349,13 @@ export default function App() {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const { toasts, show } = useToasts();
 
-  const narrow = width < 1120;
-  const veryNarrow = width < 768;
+  const narrow = width < 1200;
+  const veryNarrow = width < 900;
 
   // Auto-collapse sidebar on very narrow screens
   React.useEffect(() => {
     if (veryNarrow && !collapsed) setCollapsed(true);
-    if (!veryNarrow && collapsed && width > 768) setCollapsed(false);
+    if (!veryNarrow && collapsed && width > 900) setCollapsed(false);
   }, [width]);
 
   const sidebarWidth = collapsed ? 76 : 255;
@@ -452,7 +452,7 @@ export default function App() {
 
 const s = StyleSheet.create({
   app: { flex: 1, minHeight: '100vh', flexDirection: 'row', backgroundColor: '#F7F9FB' },
-  sidebar: { width: 255, backgroundColor: COLORS.dark2, paddingHorizontal: 11, paddingTop: 17, paddingBottom: 17 },
+  sidebar: { width: 255, ...(Platform.OS === 'web' ? { position: 'fixed', top: 0, bottom: 0, left: 0, zIndex: 5 } : {}), backgroundColor: COLORS.dark2, paddingHorizontal: 11, paddingTop: 17, paddingBottom: 17 },
   brand: { height: 75, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.13)', marginBottom: 20 },
   brandName: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', lineHeight: 18 },
   brandSub: { color: '#DCEFE9', fontSize: 10, marginTop: 3 },
@@ -492,8 +492,8 @@ const s = StyleSheet.create({
   dateCard: { minWidth: 365, minHeight: 63, borderWidth: 1, borderColor: '#DFE7ED', borderRadius: 7, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 11 },
   dateMain: { color: '#3F5B79', fontSize: 11, fontWeight: '600' },
   dateSub: { color: '#7187A0', fontSize: 10, marginTop: 9 },
-  statsGrid: { flexDirection: 'row', gap: 14, marginBottom: 20 },
-  statCard: { flex: 1, minWidth: 0, minHeight: 132, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E0E8EF', borderRadius: 7, paddingHorizontal: 19, paddingVertical: 19, flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 20 },
+  statCard: { flex: 1, minWidth: 200, minHeight: 132, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E0E8EF', borderRadius: 7, paddingHorizontal: 19, paddingVertical: 19, flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   statIcon: { width: 43, height: 43, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   tone_green: { backgroundColor: '#DFF5E9' },
   tone_blue: { backgroundColor: '#E0ECFF' },
