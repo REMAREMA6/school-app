@@ -2329,6 +2329,585 @@ function UploadResultsScreen({ search: globalSearch, show }: { search: string; s
   );
 }
 
+// === REVIEW & COMPILE DATA ===
+const REVIEW_BATCHES = [
+  { id: '1', name: 'JSS1A_Maths_T2_2025', classArm: 'JSS1A', subject: 'Mathematics', source: 'Excel/CSV', uploadedBy: 'Tunde Balogun', date: 'Aug 24, 2025 10:32 AM', status: 'Under Review', total: 50, reviewed: 34, unmatched: 3, invalid: 2, uncertain: 6 },
+  { id: '2', name: 'SS2B_Eng_T2_2025', classArm: 'SS2B', subject: 'English Language', source: 'PDF', uploadedBy: 'Adebayo Johnson', date: 'Aug 23, 2025 04:17 PM', status: 'Draft', total: 38, reviewed: 0, unmatched: 5, invalid: 4, uncertain: 2 },
+  { id: '3', name: 'JSS3A_Sci_T2_2025', classArm: 'JSS3A', subject: 'Biology', source: 'Excel/CSV', uploadedBy: 'Emmanuel Ibe', date: 'Aug 22, 2025 11:45 AM', status: 'Verified', total: 36, reviewed: 36, unmatched: 0, invalid: 0, uncertain: 0 },
+  { id: '4', name: 'SS1B_Comp_T2_2025', classArm: 'SS1B', subject: 'Computer Studies', source: 'PDF', uploadedBy: 'Grace Okafor', date: 'Aug 21, 2025 02:20 PM', status: 'Rejected', total: 41, reviewed: 12, unmatched: 8, invalid: 6, uncertain: 3 },
+  { id: '5', name: 'JSS2A_Eng_T2_2025', classArm: 'JSS2A', subject: 'English Language', source: 'Excel/CSV', uploadedBy: 'Blessing Adekunle', date: 'Aug 20, 2025 09:15 AM', status: 'Draft', total: 40, reviewed: 0, unmatched: 2, invalid: 1, uncertain: 1 },
+  { id: '6', name: 'SS3C_Gov_T2_2025', classArm: 'SS3C', subject: 'Government', source: 'Excel/CSV', uploadedBy: 'Fatima Hashim', date: 'Aug 18, 2025 03:42 PM', status: 'Under Review', total: 37, reviewed: 18, unmatched: 1, invalid: 1, uncertain: 2 },
+];
+
+const REVIEW_RECORDS = [
+  { id: 'r1', name: 'Hajara Abubakar', admission: 'AK/2024/0012', initials: 'HA', tone: 'green', scores: { assgn: 5, t1: 5, t2: 5, prac: 5, proj: 20 }, exam: 58, total: 98, match: 'Matched', validation: 'Valid' },
+  { id: 'r2', name: 'Chukwuemeka Okafor', admission: 'AK/2023/0084', initials: 'CO', tone: 'blue', scores: { assgn: 5, t1: 5, t2: 5, prac: 5, proj: 20 }, exam: 56, total: 96, match: 'Unmatched', validation: 'Valid' },
+  { id: 'r3', name: 'Amina Ibrahim', admission: 'AK/2024/0031', initials: 'AI', tone: 'purple', scores: { assgn: 5, t1: 5, t2: 4, prac: 5, proj: 19 }, exam: 52, total: 90, match: 'Matched', validation: 'Invalid' },
+  { id: 'r4', name: 'Oluwaseun Adeyemi', admission: 'AK/2022/0068', initials: 'OA', tone: 'blue', scores: { assgn: 5, t1: 5, t2: 5, prac: 5, proj: 20 }, exam: 60, total: 100, match: 'Matched', validation: 'Valid' },
+  { id: 'r5', name: 'Ifeoma Nwosu', admission: 'AK/2023/0045', initials: 'IN', tone: 'purple', scores: { assgn: 5, t1: 5, t2: 5, prac: 5, proj: 20 }, exam: 48, total: 88, match: 'Matched', validation: 'Valid' },
+  { id: 'r6', name: 'Abdulrahman Bello', admission: 'AK/2024/0076', initials: 'AB', tone: 'green', scores: { assgn: 5, t1: 5, t2: 5, prac: 5, proj: 20 }, exam: 54, total: 94, match: 'Matched', validation: 'Uncertain' },
+  { id: 'r7', name: 'Zainab Yusuf', admission: 'AK/2023/0029', initials: 'ZY', tone: 'purple', scores: { assgn: 5, t1: 4, t2: 5, prac: 5, proj: 20 }, exam: 50, total: 89, match: 'Matched', validation: 'Valid' },
+  { id: 'r8', name: 'Tunde Balogun', admission: 'AK/2024/0057', initials: 'TB', tone: 'blue', scores: { assgn: 5, t1: 5, t2: 5, prac: 5, proj: 20 }, exam: 55, total: 95, match: 'Matched', validation: 'Valid' },
+  { id: 'r9', name: 'Fatima Hashim', admission: 'AK/2024/0061', initials: 'FH', tone: 'orange', scores: { assgn: 5, t1: 5, t2: 4, prac: 5, proj: 19 }, exam: 49, total: 87, match: 'Matched', validation: 'Invalid' },
+  { id: 'r10', name: 'Ibrahim Musa', admission: 'AK/2023/0074', initials: 'IM', tone: 'green', scores: { assgn: 5, t1: 5, t2: 5, prac: 5, proj: 20 }, exam: 57, total: 97, match: 'Unmatched', validation: 'Valid' },
+];
+
+const MATCH_COLORS: Record<string, [string, string]> = {
+  'Matched': ['#D7F3E5', '#075B46'],
+  'Unmatched': ['#FFF0D4', '#C27A08'],
+};
+const VALIDATION_COLORS: Record<string, [string, string]> = {
+  'Valid': ['#D9F4E6', '#08754F'],
+  'Invalid': ['#FFE1E1', '#D92E32'],
+  'Uncertain': ['#EFE3FF', '#6E35D4'],
+};
+
+// === REVIEW & COMPILE SCREEN ===
+function ReviewCompileScreen({ search: globalSearch, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const { width } = useWindowDimensions();
+  const veryCompact = width < 900;
+  const compact = width < 1400;
+  const [batches, setBatches] = useState(REVIEW_BATCHS_INIT());
+  const [selectedBatchId, setSelectedBatchId] = useState('1');
+  const [records, setRecords] = useState(REVIEW_RECORDS);
+  const [selectedRecordId, setSelectedRecordId] = useState('r2');
+  const [batchSearch, setBatchSearch] = useState('');
+  const [batchStatusFilter, setBatchStatusFilter] = useState('All Statuses');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [matchFilter, setMatchFilter] = useState('All Match Statuses');
+  const [sort, setSort] = useState('Student Name (A-Z)');
+  const [selected, setSelected] = useState<string[]>([]);
+  const [tab, setTab] = useState<'Details' | 'Scores' | 'Activity'>('Details');
+  const [assignmentType, setAssignmentType] = useState<'Form Teacher' | 'Subject Teacher'>('Form Teacher');
+  const [assignmentClass, setAssignmentClass] = useState('');
+  const [assignmentSubject, setAssignmentSubject] = useState('');
+  const [editRecord, setEditRecord] = useState<any>(null);
+  const [editValues, setEditValues] = useState<any>({});
+  const [rejectConfirm, setRejectConfirm] = useState<any>(null);
+  const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+
+  const selectedBatch = batches.find(b => b.id === selectedBatchId) || batches[0];
+  const selectedRecord = records.find(r => r.id === selectedRecordId) || null;
+  const batchStatuses = ['All Statuses', 'Under Review', 'Draft', 'Verified', 'Rejected'];
+  const matchStatuses = ['All Match Statuses', 'Matched', 'Unmatched'];
+  const sortOptions = ['Student Name (A-Z)', 'Student Name (Z-A)', 'Total (High-Low)', 'Total (Low-High)'];
+
+  const effectiveBatchSearch = (batchSearch || globalSearch).trim().toLowerCase();
+  const filteredBatches = useMemo(() => batches.filter(b => {
+    const matchesSearch = !effectiveBatchSearch || `${b.name} ${b.classArm} ${b.subject} ${b.uploadedBy}`.toLowerCase().includes(effectiveBatchSearch);
+    const matchesStatus = batchStatusFilter === 'All Statuses' || b.status === batchStatusFilter;
+    return matchesSearch && matchesStatus;
+  }), [batches, effectiveBatchSearch, batchStatusFilter]);
+
+  const filteredRecords = useMemo(() => {
+    const q = studentSearch.trim().toLowerCase();
+    let list = records.filter(r => {
+      const matchesSearch = !q || `${r.name} ${r.admission}`.toLowerCase().includes(q);
+      const matchesFilter = matchFilter === 'All Match Statuses' || r.match === matchFilter;
+      return matchesSearch && matchesFilter;
+    });
+    if (sort === 'Student Name (A-Z)') list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    else if (sort === 'Student Name (Z-A)') list = [...list].sort((a, b) => b.name.localeCompare(a.name));
+    else if (sort === 'Total (High-Low)') list = [...list].sort((a, b) => b.total - a.total);
+    else if (sort === 'Total (Low-High)') list = [...list].sort((a, b) => a.total - b.total);
+    return list;
+  }, [records, studentSearch, matchFilter, sort]);
+
+  const reviewedCount = records.length;
+  const progressPct = selectedBatch.total ? Math.round((reviewedCount / selectedBatch.total) * 100) : 0;
+  const hasBlockingIssues = selectedBatch.unmatched > 0 || selectedBatch.invalid > 0;
+
+  function applySummaryFilter(type: 'unmatched' | 'invalid' | 'uncertain' | 'draft') {
+    if (type === 'draft') { setBatchStatusFilter('Draft'); show('Filtered: Draft batches', 'info'); return; }
+    setMatchFilter(type === 'unmatched' ? 'Unmatched' : 'All Match Statuses');
+    show(`Focused on ${type} issues for ${selectedBatch.name}`, 'info');
+  }
+
+  function toggleSelect(id: string) {
+    setSelected(curr => curr.includes(id) ? curr.filter(x => x !== id) : [...curr, id]);
+  }
+  function toggleSelectAll() {
+    setSelected(curr => curr.length === filteredRecords.length ? [] : filteredRecords.map(r => r.id));
+  }
+  function applyBulk(action: string) {
+    if (!selected.length) { show('No records selected', 'info'); setBulkOpen(false); return; }
+    show(`${action} applied to ${selected.length} record(s) (demo only)`, 'info');
+    setSelected([]);
+    setBulkOpen(false);
+  }
+
+  function openEdit(r: any) {
+    setEditRecord(r);
+    setEditValues({ ...r.scores, exam: r.exam });
+  }
+  function saveEdit() {
+    if (!editRecord) return;
+    const assgn = Number(editValues.assgn || 0), t1 = Number(editValues.t1 || 0), t2 = Number(editValues.t2 || 0), prac = Number(editValues.prac || 0), proj = Number(editValues.proj || 0), exam = Number(editValues.exam || 0);
+    if ([assgn, t1, t2, prac, proj].some(v => v < 0 || v > 10) || proj > 20 || exam > 60) { show('Score exceeds component maximum', 'error'); return; }
+    const total = assgn + t1 + t2 + prac + proj + exam;
+    setRecords(curr => curr.map(r => r.id === editRecord.id ? { ...r, scores: { assgn, t1, t2, prac, proj }, exam, total } : r));
+    setEditRecord(null);
+    show(`${editRecord.name} updated`, 'success');
+  }
+
+  function rejectBatch() {
+    if (!rejectConfirm) return;
+    setBatches(curr => curr.map(b => b.id === rejectConfirm.id ? { ...b, status: 'Rejected' } : b));
+    show(`${rejectConfirm.name} rejected`, 'info');
+    setRejectConfirm(null);
+  }
+  function saveDraft() {
+    show(`${selectedBatch.name} draft saved (demo only — not persisted)`, 'info');
+  }
+  function confirmBatch() {
+    if (hasBlockingIssues) { show('Cannot confirm — blocking issues remain', 'error'); return; }
+    setBatches(curr => curr.map(b => b.id === selectedBatch.id ? { ...b, status: 'Verified', reviewed: b.total } : b));
+    show(`${selectedBatch.name} confirmed for verification (demo only)`, 'success');
+  }
+  function removeRecord(id: string) {
+    setRecords(curr => curr.filter(r => r.id !== id));
+    if (selectedRecordId === id) setSelectedRecordId(records[0]?.id || null);
+    show('Record removed', 'info');
+    setRemoveConfirm(null);
+  }
+  function addAssignment() {
+    if (!assignmentClass || (assignmentType === 'Subject Teacher' && !assignmentSubject)) { show('Class and Subject are required', 'error'); return; }
+    show(`Assignment added: ${assignmentType} — ${assignmentClass}${assignmentType === 'Subject Teacher' ? ' / ' + assignmentSubject : ''} (demo only)`, 'success');
+    setAssignmentClass(''); setAssignmentSubject('');
+  }
+
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', minHeight: 0 }}>
+      <ScrollView style={{ flex: 1, minWidth: 0 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: compact ? '100%' : 1100, alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
+        {/* Page header */}
+        <View style={{ marginBottom: 18 }}>
+          <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Review & Compile</Text>
+          <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Review imported scores, correct errors, verify results, and prepare compilation.</Text>
+        </View>
+
+        {/* Summary cards */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+          {[['Draft Records Awaiting Review', '42', 'From 6 batches', 'amber', FileText, () => applySummaryFilter('draft')],
+            ['Unmatched Students', '12', 'Requires attention', 'blue', Users, () => applySummaryFilter('unmatched')],
+            ['Invalid Scores', '8', 'Need correction', 'red', AlertCircle, () => applySummaryFilter('invalid')],
+            ['Uncertain Values', '6', 'Needs verification', 'purple', AlertCircle, () => applySummaryFilter('uncertain')]].map(([label, value, sub, tone, Ic, action]: any) => {
+            const tones: Record<string, [string, string]> = { amber: ['#FFF0D4', '#C27A08'], blue: ['#E0ECFF', '#176DDA'], red: ['#FFE1E1', '#D92E32'], purple: ['#EFE3FF', '#6E35D4'] };
+            const [bg, fg] = tones[tone];
+            return (
+              <Pressable key={label} onPress={action} style={{ flex: 1, minWidth: 200, minHeight: 100, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}><Ic size={24} color={fg} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#647F9E', fontSize: 10, fontWeight: '600' }}>{label}</Text>
+                  <Text style={{ color: '#142F4D', fontSize: 22, fontWeight: '800', marginTop: 4 }}>{value}</Text>
+                  <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 4 }}>{sub}</Text>
+                </View>
+                <ChevronRight size={18} color="#9BAEC0" />
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Workspace: batches + review */}
+        <View style={{ flexDirection: veryCompact ? 'column' : 'row', gap: 14 }}>
+          {/* Left: Batches panel */}
+          <View style={{ width: veryCompact ? '100%' : 320, flexShrink: 0 }}>
+            <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 12 }}>
+              <Text style={{ color: '#142F4D', fontSize: 14, fontWeight: '800', marginBottom: 10 }}>Uploaded Batches</Text>
+              <View style={{ flexDirection: 'row', gap: 7, marginBottom: 10 }}>
+                <View style={{ flex: 1, height: 32, flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 8, backgroundColor: '#FFFFFF' }}>
+                  <Search size={13} color="#8299B1" />
+                  <TextInput value={batchSearch} onChangeText={setBatchSearch} placeholder="Search batches..." placeholderTextColor="#8097B0" style={{ flex: 1, fontSize: 10, color: '#142F4D', padding: 0 }} />
+                </View>
+                <Pressable onPress={() => setBatchStatusFilter(batchStatuses[(batchStatuses.indexOf(batchStatusFilter) + 1) % batchStatuses.length])} style={{ height: 32, paddingHorizontal: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFFFF' }}>
+                  <Text numberOfLines={1} style={{ color: '#244361', fontSize: 10, fontWeight: '600', maxWidth: 75 }}>{batchStatusFilter}</Text><ChevronDown size={12} color="#647F9E" />
+                </Pressable>
+              </View>
+              <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
+                {filteredBatches.map(b => {
+                  const [sbg, sfg] = UPLOAD_STATUS_COLORS[b.status] || ['#E2EAF0', '#334F6E'];
+                  const isSel = b.id === selectedBatchId;
+                  return (
+                    <Pressable key={b.id} onPress={() => { setSelectedBatchId(b.id); setMatchFilter('All Match Statuses'); }} style={{ borderWidth: 1.5, borderColor: isSel ? '#08754F' : '#E3EAF0', borderRadius: 6, padding: 10, marginBottom: 7, backgroundColor: isSel ? '#F0F7F4' : '#FFFFFF' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 11, fontWeight: '700', flex: 1 }}>{b.name}</Text>
+                        <View style={{ backgroundColor: sbg, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 }}><Text style={{ color: sfg, fontSize: 8, fontWeight: '700' }}>{b.status}</Text></View>
+                      </View>
+                      <Text style={{ color: '#647F9E', fontSize: 9, marginBottom: 4 }}>{b.classArm} · {b.subject} · {b.source}</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 9 }}>{b.uploadedBy} · {b.date}</Text>
+                    </Pressable>
+                  );
+                })}
+                {!filteredBatches.length && <Text style={{ padding: 14, color: '#647F9E', fontSize: 11, textAlign: 'center' }}>No batches match.</Text>}
+              </ScrollView>
+              <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 6 }}>Showing 1–{filteredBatches.length} of {batches.length} batches</Text>
+            </View>
+          </View>
+
+          {/* Center: Review workspace */}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 14 }}>
+              {/* Batch header */}
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+                <View style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}><FileSpreadsheet size={22} color="#08704F" /></View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <Text style={{ color: '#142F4D', fontSize: 14, fontWeight: '800' }}>{selectedBatch.name}</Text>
+                    <View style={{ backgroundColor: UPLOAD_STATUS_COLORS[selectedBatch.status]?.[0] || '#E2EAF0', borderRadius: 11, paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ color: UPLOAD_STATUS_COLORS[selectedBatch.status]?.[1] || '#334F6E', fontSize: 9, fontWeight: '700' }}>{selectedBatch.status}</Text></View>
+                  </View>
+                  <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 6 }}>Class: {selectedBatch.classArm}  ·  Subject: {selectedBatch.subject}  ·  Source: {selectedBatch.source}</Text>
+                  <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>Uploaded by: {selectedBatch.uploadedBy}  ·  {selectedBatch.date}</Text>
+                </View>
+              </View>
+
+              {/* Progress */}
+              <View style={{ marginTop: 12, marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: '700' }}>Review Progress</Text>
+                  <Text style={{ color: '#08754F', fontSize: 11, fontWeight: '800' }}>{progressPct}%</Text>
+                </View>
+                <View style={{ height: 8, backgroundColor: '#E3EAF0', borderRadius: 4, overflow: 'hidden' }}>
+                  <View style={{ height: '100%', width: `${Math.min(progressPct, 100)}%`, backgroundColor: '#08765F' }} />
+                </View>
+                <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 4 }}>{reviewedCount} of {selectedBatch.total} records reviewed</Text>
+              </View>
+
+              {/* Validation warning */}
+              {(selectedBatch.unmatched > 0 || selectedBatch.invalid > 0) && (
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 12, borderWidth: 1, borderColor: '#FFD1D5', backgroundColor: '#FFF0F1', borderRadius: 6, marginBottom: 12 }}>
+                  <AlertCircle size={17} color="#D92E32" />
+                  <Text style={{ color: '#D92E32', fontSize: 11, flex: 1, lineHeight: 16 }}>There {selectedBatch.unmatched === 1 ? 'is' : 'are'} {selectedBatch.unmatched} unmatched student{selectedBatch.unmatched > 1 ? 's' : ''} and {selectedBatch.invalid} invalid score{selectedBatch.invalid > 1 ? 's' : ''} in this batch. Please review and correct before confirming.</Text>
+                </View>
+              )}
+
+              {/* Toolbar */}
+              <View style={{ flexDirection: 'row', gap: 7, marginBottom: 10, flexWrap: 'wrap' }}>
+                <View style={{ flex: 1, minWidth: 160, height: 32, flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 8, backgroundColor: '#FFFFFF' }}>
+                  <Search size={13} color="#8299B1" />
+                  <TextInput value={studentSearch} onChangeText={setStudentSearch} placeholder="Search students..." placeholderTextColor="#8097B0" style={{ flex: 1, fontSize: 10, color: '#142F4D', padding: 0 }} />
+                </View>
+                <Pressable onPress={() => setSort(sortOptions[(sortOptions.indexOf(sort) + 1) % sortOptions.length])} style={{ height: 32, paddingHorizontal: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFFFF' }}>
+                  <Text numberOfLines={1} style={{ color: '#244361', fontSize: 10, fontWeight: '600', maxWidth: 110 }}>{sort}</Text><ChevronDown size={12} color="#647F9E" />
+                </Pressable>
+                <Pressable onPress={() => setMatchFilter(matchStatuses[(matchStatuses.indexOf(matchFilter) + 1) % matchStatuses.length])} style={{ height: 32, paddingHorizontal: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFFFF' }}>
+                  <Text numberOfLines={1} style={{ color: '#244361', fontSize: 10, fontWeight: '600', maxWidth: 90 }}>{matchFilter}</Text><ChevronDown size={12} color="#647F9E" />
+                </Pressable>
+                <Pressable onPress={() => setBulkOpen(!bulkOpen)} style={{ height: 32, paddingHorizontal: 10, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#244361', fontSize: 10, fontWeight: '600' }}>Bulk Actions</Text>
+                  <ChevronDown size={12} color="#647F9E" />
+                </Pressable>
+              </View>
+
+              {/* Bulk actions dropdown */}
+              {bulkOpen && (
+                <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10, padding: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FAFCFD', flexWrap: 'wrap' }}>
+                  <Text style={{ color: '#647F9E', fontSize: 10, alignSelf: 'center' }}>{selected.length} selected</Text>
+                  <View style={{ flex: 1 }} />
+                  {['Mark Valid', 'Mark Uncertain', 'Match', 'Reject'].map(a => (
+                    <Pressable key={a} onPress={() => applyBulk(a)} style={{ paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 4, backgroundColor: '#FFFFFF' }}>
+                      <Text style={{ color: '#244361', fontSize: 10, fontWeight: '600' }}>{a}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
+              {/* Score table */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={{ minWidth: 1080 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 36, paddingHorizontal: 8, backgroundColor: '#F0F3F6', borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
+                    <Pressable onPress={toggleSelectAll} style={{ width: 28, height: 22, justifyContent: 'center' }}>
+                      <View style={{ width: 14, height: 14, borderRadius: 3, borderWidth: 1.5, borderColor: selected.length === filteredRecords.length && filteredRecords.length > 0 ? '#08754F' : '#9BAEC0', backgroundColor: selected.length === filteredRecords.length && filteredRecords.length > 0 ? '#08754F' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                        {selected.length === filteredRecords.length && filteredRecords.length > 0 && <Check size={10} color="#FFFFFF" />}
+                      </View>
+                    </Pressable>
+                    {['Student', 'Assgn.', 'T1', 'T2', 'Prac.', 'Proj.', 'Exam', 'Total', 'Match', 'Validation', 'Actions'].map((h, i) => (
+                      <Text key={h} style={{ width: [200, 50, 45, 45, 50, 50, 50, 55, 90, 90, 70][i], fontSize: 10, fontWeight: '800', color: '#244361', paddingRight: 4, textAlign: i >= 1 && i <= 7 ? 'center' : 'left' }}>{h}</Text>
+                    ))}
+                  </View>
+                  {filteredRecords.map(r => {
+                    const [mbg, mfg] = MATCH_COLORS[r.match] || ['#E2EAF0', '#334F6E'];
+                    const [vbg, vfg] = VALIDATION_COLORS[r.validation] || ['#E2EAF0', '#334F6E'];
+                    const isIssue = r.match !== 'Matched' || r.validation !== 'Valid';
+                    const isSel = r.id === selectedRecordId;
+                    const isChk = selected.includes(r.id);
+                    const [bg, fg] = STU_TONES[r.tone] || STU_TONES.green;
+                    return (
+                      <Pressable key={r.id} onPress={() => setSelectedRecordId(r.id)} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 42, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#E8EEF3', backgroundColor: isIssue ? '#FFF9F8' : (isSel ? '#E4F6ED' : 'transparent') }}>
+                        <Pressable onPress={() => toggleSelect(r.id)} style={{ width: 28, height: 22, justifyContent: 'center' }}>
+                          <View style={{ width: 14, height: 14, borderRadius: 3, borderWidth: 1.5, borderColor: isChk ? '#08754F' : '#9BAEC0', backgroundColor: isChk ? '#08754F' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                            {isChk && <Check size={10} color="#FFFFFF" />}
+                          </View>
+                        </Pressable>
+                        <View style={{ width: 200, flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 4 }}>
+                          <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Text style={{ color: fg, fontSize: 10, fontWeight: '800' }}>{r.initials}</Text></View>
+                          <View style={{ flex: 1, minWidth: 0 }}>
+                            <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 10, fontWeight: '700' }}>{r.name}</Text>
+                            <Text style={{ color: '#647F9E', fontSize: 9 }}>{r.admission}</Text>
+                          </View>
+                        </View>
+                        {[r.scores.assgn, r.scores.t1, r.scores.t2, r.scores.prac, r.scores.proj, r.exam, r.total].map((v, i) => (
+                          <Text key={i} style={{ width: [50, 45, 45, 50, 50, 50, 55][i], fontSize: 10, color: '#355779', textAlign: 'center', fontWeight: i === 6 ? '800' : '500' }}>{v}</Text>
+                        ))}
+                        <View style={{ width: 90 }}><View style={{ backgroundColor: mbg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: mfg, fontSize: 9, fontWeight: '700' }}>{r.match}</Text></View></View>
+                        <View style={{ width: 90 }}><View style={{ backgroundColor: vbg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: vfg, fontSize: 9, fontWeight: '700' }}>{r.validation}</Text></View></View>
+                        <View style={{ width: 70, flexDirection: 'row', gap: 5 }}>
+                          <Pressable onPress={() => openEdit(r)} style={{ width: 26, height: 26, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Pencil size={13} color="#274968" /></Pressable>
+                          <Pressable onPress={() => setRemoveConfirm(r.id)} style={{ width: 26, height: 26, borderWidth: 1, borderColor: '#FFC6C8', borderRadius: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Trash2 size={13} color="#D92E32" /></Pressable>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                  {!filteredRecords.length && <Text style={{ padding: 24, color: '#647F9E', fontSize: 11, textAlign: 'center' }}>No records match.</Text>}
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Right: Student details + review summary + actions */}
+      {!veryCompact && (
+        <View style={{ width: 380, borderLeftWidth: 2, borderLeftColor: '#D5E0E8', backgroundColor: '#F8FAFC', padding: 16 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 14 }} showsVerticalScrollIndicator={false}>
+            {!selectedRecord ? (
+              <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 24, alignItems: 'center', gap: 10 }}>
+                <Users size={32} color="#9BAEC0" />
+                <Text style={{ color: '#142F4D', fontSize: 14, fontWeight: '700' }}>Select a student</Text>
+                <Text style={{ color: '#647F9E', fontSize: 11, textAlign: 'center' }}>Choose a record from the table to view details.</Text>
+              </View>
+            ) : (
+              <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7 }}>
+                {/* Header */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 12, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+                  <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: STU_TONES[selectedRecord.tone]?.[0] || '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: STU_TONES[selectedRecord.tone]?.[1] || '#075B46', fontSize: 15, fontWeight: '800' }}>{selectedRecord.initials}</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>{selectedRecord.name}</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>{selectedRecord.admission}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                      <View style={{ backgroundColor: MATCH_COLORS[selectedRecord.match]?.[0] || '#E2EAF0', borderRadius: 11, paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ color: MATCH_COLORS[selectedRecord.match]?.[1] || '#334F6E', fontSize: 9, fontWeight: '700' }}>{selectedRecord.match}</Text></View>
+                      <View style={{ backgroundColor: VALIDATION_COLORS[selectedRecord.validation]?.[0] || '#E2EAF0', borderRadius: 11, paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ color: VALIDATION_COLORS[selectedRecord.validation]?.[1] || '#334F6E', fontSize: 9, fontWeight: '700' }}>{selectedRecord.validation}</Text></View>
+                    </View>
+                  </View>
+                  <Pressable onPress={() => setSelectedRecordId(null)}><X size={18} color="#59728F" /></Pressable>
+                </View>
+
+                {/* Tabs */}
+                <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#DCE6EE', paddingHorizontal: 12 }}>
+                  {(['Details', 'Scores', 'Activity'] as const).map(t => (
+                    <Pressable key={t} onPress={() => setTab(t)} style={{ minWidth: 80, paddingVertical: 10, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: tab === t ? '#08765F' : 'transparent' }}>
+                      <Text style={{ color: tab === t ? '#08765F' : '#647F9E', fontSize: 11, fontWeight: 700 }}>{t}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <View style={{ padding: 12 }}>
+                  {tab === 'Details' ? (
+                    <View>
+                      {/* Student Information */}
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Student Information</Text>
+                      <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 5, padding: 10, marginBottom: 12 }}>
+                        {[['Full Name', selectedRecord.name], ['Gender', 'Male'], ['Date of Birth', 'Mar 12, 2008 (17 years)']].map(([l, v]: any) => (
+                          <View key={l} style={{ flexDirection: 'row', paddingVertical: 4 }}>
+                            <Text style={{ flex: 1, color: '#647F9E', fontSize: 10 }}>{l}</Text>
+                            <Text style={{ flex: 1.2, color: '#244361', fontSize: 10, fontWeight: '600' }}>{v}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      {/* Guardian */}
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Guardian Information</Text>
+                      <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 5, padding: 10, marginBottom: 12 }}>
+                        {[['Name', 'Mr. Emmanuel Okafor'], ['Phone', '0806 123 4567'], ['Relationship', 'Father']].map(([l, v]: any) => (
+                          <View key={l} style={{ flexDirection: 'row', paddingVertical: 4 }}>
+                            <Text style={{ flex: 1, color: '#647F9E', fontSize: 10 }}>{l}</Text>
+                            <Text style={{ flex: 1.2, color: '#244361', fontSize: 10, fontWeight: '600' }}>{v}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      {/* Academic */}
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Academic Information</Text>
+                      <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 5, padding: 10, marginBottom: 12 }}>
+                        {[['Class', selectedBatch.classArm], ['Admission Number', selectedRecord.admission], ['Current Session', '2024/2025']].map(([l, v]: any) => (
+                          <View key={l} style={{ flexDirection: 'row', paddingVertical: 4 }}>
+                            <Text style={{ flex: 1, color: '#647F9E', fontSize: 10 }}>{l}</Text>
+                            <Text style={{ flex: 1.2, color: '#244361', fontSize: 10, fontWeight: '600' }}>{v}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      {/* Add Assignment */}
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Add Assignment</Text>
+                      <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 5, padding: 10 }}>
+                        <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Assignment Type</Text>
+                        <View style={{ flexDirection: 'row', gap: 5, marginBottom: 9 }}>
+                          {(['Form Teacher', 'Subject Teacher'] as const).map(t => (
+                            <Pressable key={t} onPress={() => setAssignmentType(t)} style={{ flex: 1, paddingHorizontal: 8, paddingVertical: 7, borderWidth: 1, borderColor: assignmentType === t ? '#0B765B' : '#DCE6EE', borderRadius: 4, backgroundColor: assignmentType === t ? '#E2F4EC' : 'transparent' }}>
+                              <Text style={{ color: assignmentType === t ? '#075B46' : '#41698F', fontSize: 9, fontWeight: assignmentType === t ? '700' : '500' }}>{t === 'Form Teacher' ? 'Form Teacher' : 'Subject Teacher'}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                        <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', marginBottom: 4 }}>Class Arm *</Text>
+                        <Pressable onPress={() => { const opts = ['JSS1A', 'JSS1B', 'JSS2A', 'SS1A', 'SS2B']; setAssignmentClass(opts[(opts.indexOf(assignmentClass) + 1) % opts.length]); }} style={{ height: 32, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, backgroundColor: '#FFFFFF' }}>
+                          <Text style={{ color: '#142F4D', fontSize: 10 }}>{assignmentClass || 'Select class arm'}</Text>
+                          <ChevronDown size={12} color="#647F9E" />
+                        </Pressable>
+                        {assignmentType === 'Subject Teacher' && (
+                          <>
+                            <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', marginBottom: 4 }}>Subject *</Text>
+                            <Pressable onPress={() => { const opts = ['Mathematics', 'English Language', 'Biology', 'Chemistry']; setAssignmentSubject(opts[(opts.indexOf(assignmentSubject) + 1) % opts.length]); }} style={{ height: 32, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, backgroundColor: '#FFFFFF' }}>
+                              <Text style={{ color: '#142F4D', fontSize: 10 }}>{assignmentSubject || 'Select subject'}</Text>
+                              <ChevronDown size={12} color="#647F9E" />
+                            </Pressable>
+                          </>
+                        )}
+                        <Pressable onPress={addAssignment} style={{ backgroundColor: '#00513D', borderRadius: 4, paddingVertical: 8, alignItems: 'center' }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>Add Assignment</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : tab === 'Scores' ? (
+                    <View>
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Score Breakdown</Text>
+                      <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 5 }}>
+                        {[['Assignment', String(selectedRecord.scores.assgn), '5'], ['Test 1', String(selectedRecord.scores.t1), '5'], ['Test 2', String(selectedRecord.scores.t2), '5'], ['Practical', String(selectedRecord.scores.prac), '5'], ['Project', String(selectedRecord.scores.proj), '20'], ['Examination', String(selectedRecord.exam), '60'], ['Total', String(selectedRecord.total), '100']].map(([label, val, max]: any, i: number) => (
+                          <View key={label} style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderBottomWidth: i < 6 ? 1 : 0, borderBottomColor: '#EEF2F5', backgroundColor: i === 6 ? '#F0F7F4' : 'transparent' }}>
+                            <Text style={{ flex: 2, color: '#244361', fontSize: 10, fontWeight: i === 6 ? '800' : '500' }}>{label}</Text>
+                            <Text style={{ flex: 1, color: i === 6 ? '#08754F' : '#142F4D', fontSize: 11, fontWeight: '800', textAlign: 'center' }}>{val}</Text>
+                            <Text style={{ flex: 1, color: '#647F9E', fontSize: 10, textAlign: 'center' }}>/{max}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                        <View style={{ flex: 1, backgroundColor: MATCH_COLORS[selectedRecord.match]?.[0], borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                          <Text style={{ color: '#647F9E', fontSize: 9 }}>Match</Text>
+                          <Text style={{ color: MATCH_COLORS[selectedRecord.match]?.[1], fontSize: 11, fontWeight: '800', marginTop: 2 }}>{selectedRecord.match}</Text>
+                        </View>
+                        <View style={{ flex: 1, backgroundColor: VALIDATION_COLORS[selectedRecord.validation]?.[0], borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                          <Text style={{ color: '#647F9E', fontSize: 9 }}>Validation</Text>
+                          <Text style={{ color: VALIDATION_COLORS[selectedRecord.validation]?.[1], fontSize: 11, fontWeight: '800', marginTop: 2 }}>{selectedRecord.validation}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  ) : (
+                    <View>
+                      <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Recent Activity</Text>
+                      {[
+                        ['Record reviewed by administrator', '2 hours ago'],
+                        ['Score edited: T2 from 4 to 5', '1 day ago'],
+                        ['Imported from JSS1A_Maths_T2_2025', '3 days ago'],
+                      ].map(([title, time]: any, i: number) => (
+                        <View key={i} style={{ minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                          <View style={{ width: 13, alignItems: 'center' }}>{i === 0 && <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#08765F' }} />}</View>
+                          <Text style={{ color: '#244361', fontSize: 10, flex: 1 }}>{title}</Text>
+                          <Text style={{ color: '#647F9E', fontSize: 9 }}>{time}</Text>
+                        </View>
+                      ))}
+                      <Text style={{ color: '#647F9E', fontSize: 9, marginTop: 8, fontStyle: 'italic' }}>Demo events — wire to audit API for real history.</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Review Summary card */}
+                <View style={{ margin: 12, marginTop: 0, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, padding: 10, backgroundColor: '#FAFCFD' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Review Summary</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {[['Total Rows', selectedBatch.total, '#647F9E', Users], ['Unmatched', selectedBatch.unmatched, '#C27A08', Users], ['Invalid', selectedBatch.invalid, '#D92E32', AlertCircle], ['Uncertain', selectedBatch.uncertain, '#6E35D4', AlertCircle]].map(([label, val, color, Ic]: any) => (
+                      <View key={label} style={{ flexBasis: '47%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6 }}>
+                        <Ic size={14} color={color} />
+                        <View><Text style={{ color: '#647F9E', fontSize: 9 }}>{label}</Text><Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>{val}</Text></View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Bottom actions */}
+                <View style={{ paddingHorizontal: 12, paddingBottom: 12, borderTopWidth: 1, borderTopColor: '#EEF2F5', paddingTop: 12 }}>
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                    <Pressable onPress={saveDraft} style={{ flex: 1, height: 32, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+                      <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700' }}>Save Draft</Text>
+                    </Pressable>
+                    <Pressable onPress={() => setRejectConfirm(selectedBatch)} style={{ flex: 1, height: 32, borderWidth: 1, borderColor: '#FFC6C8', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+                      <Text style={{ color: '#D92E32', fontSize: 10, fontWeight: '700' }}>Reject Batch</Text>
+                    </Pressable>
+                  </View>
+                  <Pressable onPress={confirmBatch} disabled={hasBlockingIssues} style={{ height: 34, borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: hasBlockingIssues ? '#C9D6DE' : '#00513D' }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{hasBlockingIssues ? 'Resolve Issues to Confirm' : 'Confirm Batch'}</Text>
+                  </Pressable>
+                  <Text style={{ color: '#647F9E', fontSize: 9, textAlign: 'center', marginTop: 8 }}>Results will be verified before becoming official score data.</Text>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Edit Score Modal */}
+      {editRecord && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setEditRecord(null)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setEditRecord(null)}>
+            <View style={{ width: '100%', maxWidth: 440, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 20 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+                <View><Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Edit Score</Text><Text style={{ color: '#647F9E', fontSize: 11, marginTop: 2 }}>{editRecord.name} · {editRecord.admission}</Text></View>
+                <Pressable onPress={() => setEditRecord(null)}><X size={18} color="#41698F" /></Pressable>
+              </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                {[['assgn', 'Assignment', '5'], ['t1', 'Test 1', '5'], ['t2', 'Test 2', '5'], ['prac', 'Practical', '5'], ['proj', 'Project', '20'], ['exam', 'Examination', '60']].map(([key, label, max]: any) => (
+                  <View key={key} style={{ width: '47%', flexGrow: 1, minWidth: 130 }}>
+                    <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>{label} (max {max})</Text>
+                    <TextInput value={String(editValues[key] ?? '')} onChangeText={v => setEditValues((c: any) => ({ ...c, [key]: v }))} keyboardType="numeric" style={{ height: 36, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, fontSize: 12, color: '#142F4D' }} />
+                  </View>
+                ))}
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
+                <Pressable onPress={() => setEditRecord(null)} style={{ height: 34, paddingHorizontal: 14, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+                <Pressable onPress={saveEdit} style={{ height: 34, paddingHorizontal: 14, backgroundColor: '#00513D', borderRadius: 5, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Save Changes</Text></Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* Reject Confirmation */}
+      {rejectConfirm && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setRejectConfirm(null)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setRejectConfirm(null)}>
+            <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#FFF9F8', borderWidth: 1, borderColor: '#FFC6C8', alignItems: 'center', justifyContent: 'center' }}><AlertCircle size={18} color="#D92E32" /></View>
+                <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Reject Batch?</Text>
+              </View>
+              <Text style={{ color: '#647F9E', fontSize: 12, lineHeight: 18 }}>This will mark <Text style={{ fontWeight: '700', color: '#213B57' }}>{rejectConfirm.name}</Text> as Rejected. The original uploader will need to re-upload a corrected file. This action cannot be undone.</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+                <Pressable onPress={() => setRejectConfirm(null)} style={{ paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+                <Pressable onPress={rejectBatch} style={{ backgroundColor: '#D92E32', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}><Trash2 size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Reject Batch</Text></Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* Remove Record Confirmation */}
+      {removeConfirm && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setRemoveConfirm(null)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setRemoveConfirm(null)}>
+            <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+              <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 12 }}>Remove Record?</Text>
+              <Text style={{ color: '#647F9E', fontSize: 12, lineHeight: 18 }}>This will remove the student record from this batch. The original file data is unaffected. Demo only — not persisted.</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+                <Pressable onPress={() => setRemoveConfirm(null)} style={{ paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+                <Pressable onPress={() => removeRecord(removeConfirm)} style={{ backgroundColor: '#D92E32', borderRadius: 6, paddingHorizontal: 15, paddingVertical: 9 }}><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Remove</Text></Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
+    </View>
+  );
+}
+
+// Helper used by ReviewCompileScreen — returns the seed batches array (kept separate for clarity)
+function REVIEW_BATCHS_INIT() { return REVIEW_BATCHES.map(b => ({ ...b })); }
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -2419,7 +2998,7 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, Users & Permissions, and Upload Results */}
+          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, Users & Permissions, Upload Results, and Review & Compile */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
           ) : active === 'Subjects & Classes' ? (
@@ -2432,6 +3011,8 @@ export default function App() {
             <UsersPermissionsScreen search={search} show={show} />
           ) : active === 'Upload Results' ? (
             <UploadResultsScreen search={search} show={show} />
+          ) : active === 'Review & Compile' ? (
+            <ReviewCompileScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
