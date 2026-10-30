@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Akoka Result Compiler",
+    "slug": "akoka-result-compiler",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "akoka",
+    "userInterfaceStyle": "light",
+    "platforms": ["web"],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "/favicon.png"
+    },
+    "plugins": [],
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}

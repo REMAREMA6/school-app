@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,431 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// SubjectTrack.name allowed: JUNIOR | SCIENCE | ARTS | COMMERCIAL
+model SubjectTrack {
+  id       String @id @default(cuid())
+  name     String @unique
+  subjects  Subject[]
+  classArms ClassArm[]
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+model School {
+  id              String   @id @default(cuid())
+  name            String
+  motto           String?
+  logoUrl         String?
+  addressLine     String?
+  state           String?
+  country         String   @default("Nigeria")
+  establishedYear Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  academicSessions  AcademicSession[]
+  gradingBoundaries GradingBoundary[]
+  gradeRemarks      GradeRemark[]
+  users             User[]
+  teacherAssignments TeacherAssignment[]
+  students           Student[]
+  classes            Class[]
+}
+
+model AcademicSession {
+  id          String   @id @default(cuid())
+  schoolId    String
+  sessionName String
+  isActive    Boolean  @default(false)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  terms  Term[]
+}
+
+model Term {
+  id          String   @id @default(cuid())
+  sessionId   String
+  termNumber  Int
+  termName    String
+  startDate   DateTime?
+  endDate     DateTime?
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  session                 AcademicSession         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  assessmentConfigurations AssessmentConfiguration[]
+  scoreSubmissionBatches  ScoreSubmissionBatch[]
+  verifiedScores          VerifiedScore[]
+  compilationResults      CompilationResult[]
+  classPositions          ClassPosition[]
+  reportCards             ReportCard[]
+  studentClassMemberships StudentClassMembership[]
+}
+
+model Class {
+  id         String   @id @default(cuid())
+  schoolId   String
+  className  String
+  classLevel String
+  yearNumber Int
+  sortOrder  Int
+  createdAt  DateTime @default(now())
+  school    School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classArms ClassArm[]
+}
+
+model ClassArm {
+  id        String  @id @default(cuid())
+  classId   String
+  armName   String
+  fullLabel String
+  trackId   String?
+  sortOrder Int
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  class                   Class                   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  track                   SubjectTrack?           @relation(fields: [trackId], references: [id])
+  classSubjectAssignments ClassSubjectAssignment[]
+  studentClassMemberships StudentClassMembership[]
+  teacherAssignments      TeacherAssignment[]
+  assessmentConfigurations AssessmentConfiguration[]
+  scoreSubmissionBatches  ScoreSubmissionBatch[]
+  compilationResults      CompilationResult[]
+  classPositions          ClassPosition[]
+  reportCards             ReportCard[]
+}
+
+// Subject.category allowed: CORE | SCIENCE | ARTS | COMMERCIAL | PREVOCATIONAL | LANGUAGE | RELIGION
+model Subject {
+  id           String   @id @default(cuid())
+  subjectCode  String   @unique
+  subjectName  String
+  category     String
+  trackId      String?
+  isOfferedJSS Boolean          @default(false)
+  isOfferedSS  Boolean          @default(false)
+  isCore       Boolean          @default(false)
+  sortOrder    Int
+  createdAt    DateTime         @default(now())
+  track                   SubjectTrack?          @relation(fields: [trackId], references: [id])
+  classSubjectAssignments ClassSubjectAssignment[]
+  assessmentConfigurations AssessmentConfiguration[]
+  scoreSubmissionBatches  ScoreSubmissionBatch[]
+  compilationResults      CompilationResult[]
+  teacherAssignments     TeacherAssignment[]
+}
+
+model ClassSubjectAssignment {
+  id         String   @id @default(cuid())
+  classArmId String
+  subjectId  String
+  isOffered  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  classArm                ClassArm              @relation(fields: [classArmId], references: [id], onDelete: Cascade)
+  subject                 Subject               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  assessmentConfigurations AssessmentConfiguration[]
+  @@unique([classArmId, subjectId])
+}
+
+model GradingBoundary {
+  id         String   @id @default(cuid())
+  schoolId   String
+  grade      String
+  label      String
+  minPercent Float
+  maxPercent Float
+  isCredit   Boolean  @default(false)
+  sortOrder  Int
+  createdAt  DateTime @default(now())
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model GradeRemark {
+  id        String   @id @default(cuid())
+  schoolId  String
+  grade     String
+  remark    String
+  createdAt DateTime @default(now())
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  @@unique([schoolId, grade])
+}
+
+// User.role allowed: ADMIN | TEACHER | PRINCIPAL
+model User {
+  id           String   @id @default(cuid())
+  schoolId     String
+  email        String   @unique
+  passwordHash String?
+  role         String   @default("TEACHER")
+  fullName     String
+  phone        String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  school             School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacherAssignments TeacherAssignment[]
+  scoreSubmissionBatches ScoreSubmissionBatch[]
+  auditEvents        AuditEvent[]
+  approvedReportCards ReportCard[] @relation("ReportCardApprovedBy")
+}
+
+model TeacherAssignment {
+  id            String   @id @default(cuid())
+  userId        String
+  schoolId      String
+  assignmentType String
+  classArmId    String
+  subjectId     String?
+  createdAt     DateTime @default(now())
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school   School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classArm ClassArm   @relation(fields: [classArmId], references: [id], onDelete: Cascade)
+  subject  Subject?   @relation(fields: [subjectId], references: [id])
+  @@unique([userId, classArmId, subjectId, assignmentType])
+}
+
+model Student {
+  id              String   @id @default(cuid())
+  schoolId        String
+  admissionNumber String   @unique
+  surname         String
+  firstName       String
+  otherNames      String?
+  gender          String?
+  dateOfBirth     DateTime?
+  photoUrl        String?
+  bloodGroup      String?
+  guardianName    String?
+  guardianPhone   String?
+  homeAddress     String?
+  nationality     String   @default("Nigerian")
+  stateOfOrigin   String?
+  religion        String?
+  admissionDate   DateTime @default(now())
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  school             School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classMemberships   StudentClassMembership[]
+  verifiedScores     VerifiedScore[]
+  compilationResults CompilationResult[]
+  classPositions     ClassPosition[]
+  reportCards        ReportCard[]
+  scoreDrafts        ScoreDraft[]
+}
+
+model StudentClassMembership {
+  id         String   @id @default(cuid())
+  studentId  String
+  classArmId String
+  termId     String
+  isCurrent  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classArm ClassArm @relation(fields: [classArmId], references: [id], onDelete: Cascade)
+  term     Term     @relation(fields: [termId], references: [id], onDelete: Cascade)
+  @@unique([studentId, termId])
+}
+
+model AssessmentConfiguration {
+  id                       String @id @default(cuid())
+  classArmId               String
+  subjectId                String
+  termId                   String
+  classSubjectAssignmentId String
+  caMaximum                Int    @default(40)
+  examMaximum              Int    @default(60)
+  overallMaximum           Int    @default(100)
+  version                  Int    @default(1)
+  createdByUserId          String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  classArm               ClassArm              @relation(fields: [classArmId], references: [id], onDelete: Cascade)
+  subject                Subject               @relation(fields: [subjectId], references: [id])
+  term                   Term                  @relation(fields: [termId], references: [id], onDelete: Cascade)
+  classSubjectAssignment ClassSubjectAssignment @relation(fields: [classSubjectAssignmentId], references: [id], onDelete: Cascade)
+  components             AssessmentComponent[]
+  verifiedScores         VerifiedScore[]
+  compilationResults     CompilationResult[]
+  scoreSubmissionBatches ScoreSubmissionBatch[]
+}
+
+// AssessmentComponent.componentType allowed: CONTINUOUS_ASSESSMENT | EXAMINATION
+model AssessmentComponent {
+  id                       String   @id @default(cuid())
+  assessmentConfigurationId String
+  componentName            String
+  componentType            String
+  maximumMark              Int
+  sortOrder                Int
+  createdAt                DateTime @default(now())
+  assessmentConfiguration AssessmentConfiguration @relation(fields: [assessmentConfigurationId], references: [id], onDelete: Cascade)
+  verifiedScores          VerifiedScore[]
+  scoreDrafts             ScoreDraft[]
+  @@unique([assessmentConfigurationId, componentName])
+}
+
+// ScoreSubmissionBatch.sourceType allowed: SPREADSHEET | SCANNED_PAPER | MANUAL_ENTRY
+// ScoreSubmissionBatch.status allowed: UPLOADED | PROCESSING | AWAITING_REVIEW | CONFIRMED | FAILED
+model ScoreSubmissionBatch {
+  id                        String   @id @default(cuid())
+  batchRef                  String   @unique
+  classArmId                String
+  subjectId                 String
+  termId                    String
+  assessmentConfigurationId String
+  sourceType                String
+  sourceFileName            String?
+  sourceFilePath            String?
+  uploadedByUserId          String
+  status                    String @default("UPLOADED")
+  totalRows                 Int?
+  validRows                 Int?
+  invalidRows               Int?
+  extractedAt               DateTime?
+  confirmedAt               DateTime?
+  notes                     String?
+  createdAt                 DateTime @default(now())
+  classArm               ClassArm              @relation(fields: [classArmId], references: [id])
+  subject                Subject               @relation(fields: [subjectId], references: [id])
+  term                   Term                  @relation(fields: [termId], references: [id])
+  assessmentConfiguration AssessmentConfiguration @relation(fields: [assessmentConfigurationId], references: [id])
+  uploadedBy             User                  @relation(fields: [uploadedByUserId], references: [id])
+  scoreDrafts            ScoreDraft[]
+  verifiedScores         VerifiedScore[]
+  auditEvents            AuditEvent[]
+}
+
+// ScoreDraft.status allowed: PENDING_REVIEW | FLAGGED_INVALID | FLAGGED_UNCERTAIN | CONFIRMED | REJECTED
+model ScoreDraft {
+  id                     String   @id @default(cuid())
+  batchId                String
+  studentId              String?
+  studentNameRaw         String
+  admissionNumberRaw     String?
+  assessmentComponentId  String
+  enteredValue           Float?
+  isMissing              Boolean  @default(false)
+  isUncertain            Boolean  @default(false)
+  extractionConfidence   Float?
+  validationIssues       String?
+  status                 String @default("PENDING_REVIEW")
+  reviewerNote           String?
+  createdAt              DateTime @default(now())
+  batch               ScoreSubmissionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  student             Student?             @relation(fields: [studentId], references: [id])
+  assessmentComponent AssessmentComponent  @relation(fields: [assessmentComponentId], references: [id])
+}
+
+// VerifiedScore.status allowed: VERIFIED | REVISED
+model VerifiedScore {
+  id                        String   @id @default(cuid())
+  studentId                 String
+  assessmentComponentId     String
+  assessmentConfigurationId String
+  termId                    String
+  scoreSubmissionBatchId    String
+  value                     Float
+  status                    String @default("VERIFIED")
+  wasManuallyCorrected      Boolean  @default(false)
+  originalExtractedValue    Float?
+  confirmedByUserId         String?
+  confirmedAt               DateTime  @default(now())
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  student                Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assessmentComponent    AssessmentComponent  @relation(fields: [assessmentComponentId], references: [id])
+  assessmentConfiguration AssessmentConfiguration @relation(fields: [assessmentConfigurationId], references: [id])
+  term                   Term                 @relation(fields: [termId], references: [id])
+  scoreSubmissionBatch   ScoreSubmissionBatch @relation(fields: [scoreSubmissionBatchId], references: [id])
+  @@unique([studentId, assessmentComponentId, termId])
+}
+
+model CompilationResult {
+  id                        String   @id @default(cuid())
+  studentId                 String
+  subjectId                 String
+  classArmId                String
+  termId                    String
+  assessmentConfigurationId String
+  caTotal                   Float
+  examScore                 Float?
+  overallTotal              Float
+  overallMaximum            Int      @default(100)
+  grade                     String?
+  gradeLabel                String?
+  remark                    String?
+  subjectPositionInArm      Int?
+  isComplete                Boolean  @default(false)
+  incompleteReason          String?
+  recalculatedAt            DateTime @default(now())
+  createdAt                 DateTime @default(now())
+  student                Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject                Subject               @relation(fields: [subjectId], references: [id])
+  classArm               ClassArm              @relation(fields: [classArmId], references: [id])
+  term                   Term                  @relation(fields: [termId], references: [id])
+  assessmentConfiguration AssessmentConfiguration @relation(fields: [assessmentConfigurationId], references: [id])
+  @@unique([studentId, subjectId, termId])
+}
+
+model ClassPosition {
+  id               String   @id @default(cuid())
+  studentId        String
+  classArmId       String
+  termId           String
+  totalAggregate   Float
+  averageScore     Float
+  subjectCount     Int
+  position         Int
+  numStudentsInArm Int
+  isComplete       Boolean  @default(false)
+  recalculatedAt   DateTime @default(now())
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classArm ClassArm @relation(fields: [classArmId], references: [id])
+  term     Term     @relation(fields: [termId], references: [id])
+  @@unique([studentId, termId])
+}
+
+// ReportCard.status allowed: DRAFT | READY_FOR_REVIEW | APPROVED | PUBLISHED | SUPERSEDED
+model ReportCard {
+  id                    String            @id @default(cuid())
+  studentId             String
+  classArmId            String
+  termId                String
+  status                String            @default("DRAFT")
+  pdfFilePath           String?
+  pdfGeneratedAt        DateTime?
+  approvedByUserId      String?
+  approvedAt            DateTime?
+  publishedAt           DateTime?
+  attendancePresentDays Int?
+  attendanceTotalDays   Int?
+  affectiveTraitsJson   String?
+  psychomotorTraitsJson String?
+  classTeacherComment   String?
+  principalComment      String?
+  nextTermBegins        DateTime?
+  version               Int               @default(1)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classArm ClassArm @relation(fields: [classArmId], references: [id])
+  term     Term     @relation(fields: [termId], references: [id])
+  approvedBy User?    @relation("ReportCardApprovedBy", fields: [approvedByUserId], references: [id])
+  @@unique([studentId, termId])
+}
+
+// AuditEvent.eventType allowed: BATCH_UPLOADED | BATCH_CONFIRMED | SCORE_CORRECTED | ASSESSMENT_CONFIG_CHANGED | RESULT_COMPILED | REPORT_CARD_GENERATED | REPORT_CARD_APPROVED | REPORT_CARD_PUBLISHED | STUDENT_CREATED | STUDENT_UPDATED | USER_CREATED | USER_ROLE_CHANGED
+model AuditEvent {
+  id               String         @id @default(cuid())
+  schoolId         String?
+  eventType        String
+  actorUserId      String?
+  batchId          String?
+  targetStudentId  String?
+  targetSubjectId  String?
+  targetClassArmId String?
+  description      String
+  metadataJson     String?
+  occurredAt       DateTime       @default(now())
+  actor User?               @relation(fields: [actorUserId], references: [id])
+  batch ScoreSubmissionBatch? @relation(fields: [batchId], references: [id])
 }
