@@ -11,6 +11,7 @@ import {
   UserRound, ChevronUp, Check, Trash2, Layers, BookMarked, Save, FlaskConical,
   Languages, Calculator, Globe2, Code2, Leaf, Scale, TrendingUp, Microscope,
   ChevronLeft, ChevronRight, Printer, ShieldCheck, Clock3, User as UserIcon,
+  Trophy, GripVertical, SlidersHorizontal,
 } from 'lucide-react-native';
 
 const C = {
@@ -969,6 +970,409 @@ function StudentsScreen({ search: globalSearch, show }: { search: string; show: 
   );
 }
 
+// === ASSESSMENT CONFIG DATA ===
+const SEED_CONFIGS = [
+  { id: 1, className: 'JSS1', subject: 'Mathematics', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 1, name: 'Assignment', marks: 5 }, { id: 2, name: 'Test 1', marks: 5 }, { id: 3, name: 'Test 2', marks: 5 }, { id: 4, name: 'Practical', marks: 5 }, { id: 5, name: 'Project', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 2, className: 'JSS1', subject: 'English Language', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 6, name: 'Assignment', marks: 10 }, { id: 7, name: 'Test', marks: 10 }, { id: 8, name: 'Classwork', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 3, className: 'JSS1', subject: 'Biology', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 9, name: 'Assignment', marks: 10 }, { id: 10, name: 'Test', marks: 10 }, { id: 11, name: 'Practical', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 4, className: 'JSS2', subject: 'Mathematics', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 12, name: 'Assignment', marks: 10 }, { id: 13, name: 'Test', marks: 10 }, { id: 14, name: 'Project', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 5, className: 'JSS2', subject: 'Chemistry', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 15, name: 'Assignment', marks: 10 }, { id: 16, name: 'Test', marks: 10 }, { id: 17, name: 'Practical', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 6, className: 'JSS3', subject: 'Physics', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 18, name: 'Assignment', marks: 10 }, { id: 19, name: 'Test', marks: 10 }, { id: 20, name: 'Practical', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 7, className: 'SS1', subject: 'Government', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 21, name: 'Assignment', marks: 10 }, { id: 22, name: 'Test', marks: 10 }, { id: 23, name: 'Project', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 8, className: 'SS1', subject: 'Literature-in-English', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 24, name: 'Assignment', marks: 10 }, { id: 25, name: 'Test', marks: 10 }, { id: 26, name: 'Classwork', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 9, className: 'SS2', subject: 'Economics', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 27, name: 'Assignment', marks: 10 }, { id: 28, name: 'Test', marks: 10 }, { id: 29, name: 'Project', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 10, className: 'SS3', subject: 'Biology', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 30, name: 'Assignment', marks: 10 }, { id: 31, name: 'Test', marks: 10 }, { id: 32, name: 'Practical', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 11, className: 'SS2', subject: 'Mathematics', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 33, name: 'Assignment', marks: 10 }, { id: 34, name: 'Test', marks: 10 }, { id: 35, name: 'Project', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+  { id: 12, className: 'SS3', subject: 'English Language', caMax: 40, examMax: 60, status: 'Active', components: [{ id: 36, name: 'Assignment', marks: 10 }, { id: 37, name: 'Test', marks: 10 }, { id: 38, name: 'Classwork', marks: 20 }], passMark: 40, rounding: 'Whole number', allowMissing: false },
+];
+
+// === ASSESSMENT CONFIG SCREEN ===
+function AssessmentConfigScreen({ search: globalSearch, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 1100;
+  const [configs, setConfigs] = useState(SEED_CONFIGS);
+  const [selectedId, setSelectedId] = useState(1);
+  const [tab, setTab] = useState<'CA Components' | 'Settings'>('CA Components');
+  const [modal, setModal] = useState<string | null>(null);
+  const [componentDraft, setComponentDraft] = useState<any>({ name: '', marks: '5' });
+  const [editingComponentId, setEditingComponentId] = useState<number | null>(null);
+  const [formDraft, setFormDraft] = useState<any>(null);
+  const [query, setQuery] = useState('');
+  const [classFilter, setClassFilter] = useState('All Classes');
+  const [subjectFilter, setSubjectFilter] = useState('All Subjects');
+  const [page, setPage] = useState(1);
+
+  const selected = configs.find(c => c.id === selectedId) || configs[0];
+  const componentTotal = selected.components.reduce((sum: number, c: any) => sum + Number(c.marks || 0), 0);
+  const totalMarks = Number(selected.caMax) + Number(selected.examMax);
+  const allClasses = ['All Classes', 'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+  const subjects = ['All Subjects', ...Array.from(new Set(configs.map(c => c.subject)))];
+
+  const filtered = useMemo(() => configs.filter(c => {
+    const q = (query || globalSearch).toLowerCase();
+    const matchesQuery = !q || `${c.className} ${c.subject} ${c.status}`.toLowerCase().includes(q);
+    const matchesClass = classFilter === 'All Classes' || c.className === classFilter;
+    const matchesSubject = subjectFilter === 'All Subjects' || c.subject === subjectFilter;
+    return matchesQuery && matchesClass && matchesSubject;
+  }), [configs, query, globalSearch, classFilter, subjectFilter]);
+
+  const pageSize = 10;
+  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pages);
+  const rows = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  function updateSelected(patch: any) {
+    setConfigs(old => old.map(c => c.id === selected.id ? { ...c, ...patch } : c));
+  }
+  function openNewConfiguration() {
+    setFormDraft({ className: 'JSS1', subject: '', caMax: '40', examMax: '60', status: 'Active', components: [], passMark: '40', rounding: 'Whole number', allowMissing: false });
+    setModal('configuration');
+  }
+  function openEditConfiguration() {
+    setFormDraft({ ...selected, caMax: String(selected.caMax), examMax: String(selected.examMax), passMark: String(selected.passMark) });
+    setModal('editConfiguration');
+  }
+  function saveConfiguration() {
+    if (!formDraft?.subject?.trim()) { show('Enter a subject name before saving', 'error'); return; }
+    const item = { ...formDraft, id: Math.max(0, ...configs.map(c => c.id)) + 1, caMax: Number(formDraft.caMax), examMax: Number(formDraft.examMax), passMark: Number(formDraft.passMark), components: formDraft.components || [] };
+    setConfigs(old => [...old, item]);
+    setSelectedId(item.id);
+    setModal(null);
+    show(`${item.className} ${item.subject} configuration added`, 'success');
+  }
+  function saveEditConfiguration() {
+    updateSelected({ ...formDraft, caMax: Number(formDraft.caMax), examMax: Number(formDraft.examMax), passMark: Number(formDraft.passMark) });
+    setModal(null);
+    show('Configuration settings saved', 'success');
+  }
+  function deleteConfiguration() {
+    const next = configs.find(c => c.id !== selected.id);
+    setConfigs(old => old.filter(c => c.id !== selected.id));
+    if (next) setSelectedId(next.id);
+    setModal(null);
+    show(`${selected.className} ${selected.subject} configuration deleted`, 'info');
+  }
+  function openComponent(component: any) {
+    setEditingComponentId(component?.id ?? null);
+    setComponentDraft(component ? { name: component.name, marks: String(component.marks) } : { name: '', marks: '5' });
+    setModal('component');
+  }
+  function saveComponent() {
+    if (!componentDraft.name.trim() || Number(componentDraft.marks) < 0) { show('Enter a component name and valid marks', 'error'); return; }
+    const component = { id: editingComponentId ?? Date.now(), name: componentDraft.name.trim(), marks: Number(componentDraft.marks) };
+    updateSelected({
+      components: editingComponentId
+        ? selected.components.map((c: any) => c.id === editingComponentId ? component : c)
+        : [...selected.components, component]
+    });
+    setModal(null);
+    show(`Component ${component.name} saved`, 'success');
+  }
+  function deleteComponent(id: number) {
+    updateSelected({ components: selected.components.filter((c: any) => c.id !== id) });
+    show('Component removed', 'info');
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: 1600, alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
+      {/* Page header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 15, marginBottom: 18, flexWrap: 'wrap' }}>
+        <View style={{ flex: 1, minWidth: 280 }}>
+          <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Assessment Configuration</Text>
+          <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Configure continuous assessment components and examination weightings.</Text>
+        </View>
+        <Pressable onPress={openNewConfiguration} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 37, paddingHorizontal: 15 }}>
+          <Plus size={16} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Add Configuration</Text>
+        </Pressable>
+      </View>
+
+      {/* Summary cards */}
+      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        {[['Continuous Assessment (CA)', '40', 'marks', '40% of total', '#DFF5E9', '#08754F', FileText], ['Examination', '60', 'marks', '60% of total', '#E0ECFF', '#176DDA', FileText], ['Total', '100', 'marks', '100%', '#EFE3FF', '#6E35D4', Trophy]].map(([label, value, unit, foot, bg, fg, Ic]: any) => (
+          <View key={label} style={{ flex: 1, minWidth: 220, minHeight: 110, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 17, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+            <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}><Ic size={24} color={fg} /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#647F9E', fontSize: 11, fontWeight: '600' }}>{label}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5, marginTop: 5 }}>
+                <Text style={{ color: '#142F4D', fontSize: 26, fontWeight: '800' }}>{value}</Text>
+                <Text style={{ color: '#142F4D', fontSize: 11 }}>{unit}</Text>
+              </View>
+              <Text style={{ color: '#08754F', fontSize: 11, fontWeight: '700', marginTop: 5 }}>{foot}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      {/* Workspace: directory + detail */}
+      <View style={{ flexDirection: compact ? 'column' : 'row', gap: 12, alignItems: 'stretch' }}>
+        {/* Left: Directory */}
+        <View style={{ flex: 1.45, minWidth: 0, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+            <Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>Assessment Configuration</Text>
+          </View>
+          {/* Filters */}
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            <View style={{ flex: 1, minWidth: 180, height: 36, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, backgroundColor: '#FFFFFF' }}>
+              <Search size={16} color="#647F9E" />
+              <TextInput value={query} onChangeText={v => { setQuery(v); setPage(1); }} placeholder="Search by subject or class..." placeholderTextColor="#8097B0" style={{ flex: 1, fontSize: 11, color: '#142F4D', padding: 0 }} />
+            </View>
+            <Pressable onPress={() => { setClassFilter(allClasses[(allClasses.indexOf(classFilter) + 1) % allClasses.length]); setPage(1); }} style={{ width: 150, height: 36, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, backgroundColor: '#FFFFFF' }}>
+              <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 11, flex: 1 }}>{classFilter}</Text><ChevronDown size={15} color="#647F9E" />
+            </Pressable>
+            <Pressable onPress={() => { setSubjectFilter(subjects[(subjects.indexOf(subjectFilter) + 1) % subjects.length]); setPage(1); }} style={{ width: 170, height: 36, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, backgroundColor: '#FFFFFF' }}>
+              <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 11, flex: 1 }}>{subjectFilter}</Text><ChevronDown size={15} color="#647F9E" />
+            </Pressable>
+          </View>
+
+          {/* Table */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ minWidth: 680 }}>
+              <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0F4F7', paddingHorizontal: 12, borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
+                {['Class', 'Subject', 'CA Max', 'Exam Max', 'Total', 'Status', ''].map((h, i) => (
+                  <Text key={h} style={{ width: [108, undefined, 105, 105, 82, 95, 34][i], flex: i === 1 ? 1.5 : undefined, color: '#385779', fontSize: 10, fontWeight: '800' }}>{h}</Text>
+                ))}
+              </View>
+              {rows.map((row: any) => (
+                <Pressable key={row.id} onPress={() => { setSelectedId(row.id); setTab('CA Components'); }} style={{ minHeight: 46, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#EAF0F4', backgroundColor: selectedId === row.id ? '#EAF7F1' : 'transparent', borderWidth: selectedId === row.id ? 1 : 0, borderColor: selectedId === row.id ? '#A5DDC6' : 'transparent', borderRadius: selectedId === row.id ? 5 : 0 }}>
+                  <Text style={{ width: 108, color: '#355779', fontSize: 11, paddingRight: 7 }}>{row.className}</Text>
+                  <Text numberOfLines={1} style={{ flex: 1.5, color: '#355779', fontSize: 11, fontWeight: selectedId === row.id ? 700 : 500, paddingRight: 7 }}>{row.subject}</Text>
+                  <Text style={{ width: 105, color: '#355779', fontSize: 11, paddingRight: 7 }}>{row.caMax}</Text>
+                  <Text style={{ width: 105, color: '#355779', fontSize: 11, paddingRight: 7 }}>{row.examMax}</Text>
+                  <Text style={{ width: 82, color: '#355779', fontSize: 11, paddingRight: 7 }}>{Number(row.caMax) + Number(row.examMax)}</Text>
+                  <View style={{ width: 95, justifyContent: 'center' }}><View style={{ alignSelf: 'flex-start', backgroundColor: '#D9F5E8', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 14 }}><Text style={{ color: '#08734E', fontSize: 10, fontWeight: 700 }}>{row.status}</Text></View></View>
+                  <Pressable onPress={() => { setSelectedId(row.id); setModal('rowActions'); }} style={{ width: 34, alignItems: 'center', justifyContent: 'center' }}><MoreVertical size={17} color="#647F9E" /></Pressable>
+                </Pressable>
+              ))}
+              {!rows.length && <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#647F9E', fontSize: 12 }}>No configurations match your filters.</Text></View>}
+            </View>
+          </ScrollView>
+
+          {/* Pagination */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 14 }}>
+            <Text style={{ color: '#647F9E', fontSize: 11 }}>Showing {filtered.length ? (safePage - 1) * pageSize + 1 : 0}–{Math.min(safePage * pageSize, filtered.length)} of {filtered.length} configurations</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Pressable onPress={() => setPage(Math.max(1, safePage - 1))} style={{ minWidth: 30, height: 30, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronLeft size={16} color="#647F9E" /></Pressable>
+              {Array.from({ length: Math.min(3, pages) }, (_, i) => i + 1).map(p => (
+                <Pressable key={p} onPress={() => setPage(p)} style={{ minWidth: 30, height: 30, borderWidth: 1, borderColor: safePage === p ? '#08765F' : '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: safePage === p ? '#08765F' : '#FFFFFF' }}>
+                  <Text style={{ color: safePage === p ? '#FFFFFF' : '#142F4D', fontSize: 11, fontWeight: 700 }}>{p}</Text>
+                </Pressable>
+              ))}
+              <Pressable onPress={() => setPage(Math.min(pages, safePage + 1))} style={{ minWidth: 30, height: 30, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronRight size={16} color="#647F9E" /></Pressable>
+            </View>
+          </View>
+        </View>
+
+        {/* Right: Detail panel */}
+        <View style={{ flex: 1, minWidth: 320, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 14 }}>
+          {/* Header */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 18 }}>
+            <View style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}><BookOpen size={23} color="#00372D" /></View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 16, fontWeight: '800', flexShrink: 1 }}>{selected.className} – {selected.subject}</Text>
+                <View style={{ backgroundColor: '#D9F5E8', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 14 }}><Text style={{ color: '#08734E', fontSize: 10, fontWeight: 700 }}>{selected.status}</Text></View>
+              </View>
+              <Text style={{ color: '#647F9E', fontSize: 11, marginTop: 8 }}>Class: {selected.className}  |  Subject: {selected.subject}</Text>
+            </View>
+            <Pressable onPress={() => { const next = configs.find(c => c.id !== selected.id); if (next) setSelectedId(next.id); }}><X size={19} color="#647F9E" /></Pressable>
+          </View>
+
+          {/* Marks summary */}
+          <View style={{ flexDirection: 'row', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingVertical: 9, marginBottom: 16 }}>
+            {[['CA Maximum', selected.caMax], ['Exam Maximum', selected.examMax], ['Total', totalMarks]].map(([label, value]: any, i: number) => (
+              <View key={label} style={{ flex: 1, paddingHorizontal: 12, borderRightWidth: i < 2 ? 1 : 0, borderRightColor: '#DCE6EE' }}>
+                <Text style={{ color: '#647F9E', fontSize: 10 }}>{label}</Text>
+                <Text style={{ color: '#142F4D', fontSize: 22, fontWeight: '800', marginTop: 6 }}>{value}</Text>
+                <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>marks</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Tabs */}
+          <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#DCE6EE', marginBottom: 18 }}>
+            {(['CA Components', 'Settings'] as const).map(t => (
+              <Pressable key={t} onPress={() => setTab(t)} style={{ minWidth: 135, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: tab === t ? '#08765F' : 'transparent' }}>
+                <Text style={{ color: tab === t ? '#08765F' : '#647F9E', fontSize: 11, fontWeight: 700 }}>{t}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Tab content */}
+          {tab === 'CA Components' ? (
+            <View>
+              <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800', marginBottom: 12 }}>Continuous Assessment Components</Text>
+              <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, overflow: 'hidden' }}>
+                <View style={{ minHeight: 38, backgroundColor: '#F1F5F8', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, gap: 8 }}>
+                  <View style={{ width: 24 }} />
+                  <Text style={{ flex: 1, color: '#385779', fontSize: 10, fontWeight: 800 }}>Component</Text>
+                  <Text style={{ width: 112, color: '#385779', fontSize: 10, fontWeight: 800 }}>Maximum Marks</Text>
+                  <Text style={{ width: 76, color: '#385779', fontSize: 10, fontWeight: 800 }}>Actions</Text>
+                </View>
+                {selected.components.map((component: any) => (
+                  <View key={component.id} style={{ minHeight: 43, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, gap: 8, borderTopWidth: 1, borderTopColor: '#EAF0F4' }}>
+                    <GripVertical size={15} color="#647F9E" />
+                    <Text numberOfLines={1} style={{ flex: 1, color: '#355779', fontSize: 11 }}>{component.name}</Text>
+                    <Text style={{ width: 112, color: '#355779', fontSize: 11 }}>{component.marks}</Text>
+                    <View style={{ width: 76, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                      <Pressable onPress={() => openComponent(component)} style={{ width: 31, height: 31, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Pencil size={15} color="#142F4D" /></Pressable>
+                      <Pressable onPress={() => deleteComponent(component.id)} style={{ width: 31, height: 31, marginLeft: 6, borderWidth: 1, borderColor: '#FFC6C8', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Trash2 size={15} color="#D92E32" /></Pressable>
+                    </View>
+                  </View>
+                ))}
+                {!selected.components.length && <Text style={{ padding: 14, color: '#647F9E', fontSize: 12 }}>No CA components yet. Add one below.</Text>}
+              </View>
+              <Pressable onPress={() => openComponent(null)} style={{ alignSelf: 'flex-start', marginTop: 14, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, minHeight: 34, paddingHorizontal: 13 }}>
+                <Plus size={15} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 700 }}>Add CA Component</Text>
+              </Pressable>
+
+              {/* Validation */}
+              <View style={{ marginTop: 12, borderRadius: 8, paddingHorizontal: 13, paddingVertical: 13, borderWidth: 1, backgroundColor: componentTotal <= Number(selected.caMax) ? '#EAF8F1' : '#FFF0F1', borderColor: componentTotal <= Number(selected.caMax) ? '#D1F0E1' : '#FFD6D9' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                  <Text style={{ color: '#1D6A4C', fontSize: 11, fontWeight: 800 }}>CA Total</Text>
+                  <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: 800, marginLeft: 16 }}>{componentTotal} / {selected.caMax}</Text>
+                  <View style={{ flex: 1 }} />
+                  <CheckCircle2 size={16} color={componentTotal <= Number(selected.caMax) ? '#087A50' : '#D92E32'} />
+                  <Text style={{ color: componentTotal <= Number(selected.caMax) ? '#087A50' : '#D92E32', fontSize: 10, fontWeight: 700 }}>{componentTotal <= Number(selected.caMax) ? 'Matches CA Maximum' : 'Exceeds CA Maximum'}</Text>
+                </View>
+              </View>
+              {componentTotal > Number(selected.caMax) && (
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, padding: 13, borderWidth: 1, borderColor: '#FFD1D5', backgroundColor: '#FFF0F1', borderRadius: 8 }}>
+                  <AlertCircle size={17} color="#D92E32" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#D92E32', fontSize: 11, fontWeight: 800 }}>Component total exceeds CA maximum</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 6, lineHeight: 15 }}>Total is {componentTotal}, which is {componentTotal - Number(selected.caMax)} marks over the configured CA maximum ({selected.caMax}).</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View>
+              <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800', marginBottom: 12 }}>Assessment Settings</Text>
+              {[
+                { label: 'CA Maximum Marks', key: 'caMax', keyboardType: 'numeric' },
+                { label: 'Examination Maximum Marks', key: 'examMax', keyboardType: 'numeric' },
+                { label: 'Pass Mark', key: 'passMark', keyboardType: 'numeric' },
+              ].map(f => (
+                <View key={f.key} style={{ marginBottom: 13 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>{f.label}</Text>
+                  <TextInput
+                    value={String(formDraft?.[f.key] ?? selected[f.key])}
+                    onChangeText={v => setFormDraft((old: any) => ({ ...(old || selected), [f.key]: v }))}
+                    keyboardType={f.keyboardType as any}
+                    style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }}
+                  />
+                </View>
+              ))}
+              {/* Rounding selector */}
+              <View style={{ marginBottom: 13 }}>
+                <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Rounding Rule</Text>
+                <Pressable onPress={() => { const opts = ['Whole number', '1 decimal place', '2 decimal places']; const cur = formDraft?.rounding ?? selected.rounding; setFormDraft((old: any) => ({ ...(old || selected), rounding: opts[(opts.indexOf(cur) + 1) % opts.length] })); }} style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12 }}>{formDraft?.rounding ?? selected.rounding}</Text>
+                  <ChevronDown size={15} color="#647F9E" />
+                </Pressable>
+                <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 5 }}>Tap the value to cycle through available options.</Text>
+              </View>
+              {/* Allow missing toggle */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700 }}>Allow missing CA scores</Text>
+                  <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 5 }}>Permit compilation when a component score has not been entered.</Text>
+                </View>
+                <Pressable onPress={() => setFormDraft((old: any) => ({ ...(old || selected), allowMissing: !((old || selected).allowMissing) }))} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 20, paddingHorizontal: 5, paddingVertical: 4, backgroundColor: '#FFFFFF' }}>
+                  <SlidersHorizontal size={15} color="#637F9D" />
+                  <View style={{ width: 30, height: 16, borderRadius: 9, backgroundColor: (formDraft?.allowMissing ?? selected.allowMissing) ? '#08765F' : '#CCD8E2', paddingHorizontal: 2, justifyContent: 'center' }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FFFFFF', alignSelf: (formDraft?.allowMissing ?? selected.allowMissing) ? 'flex-end' : 'flex-start' }} />
+                  </View>
+                </Pressable>
+              </View>
+              <Pressable onPress={saveEditConfiguration} style={{ alignSelf: 'flex-start', marginTop: 12, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, minHeight: 34, paddingHorizontal: 13 }}>
+                <Save size={15} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 700 }}>Save Settings</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Footer */}
+          <View style={{ flexDirection: 'row', gap: 8, borderTopWidth: 1, borderTopColor: '#EEF2F5', paddingTop: 14, marginTop: 18 }}>
+            <Pressable onPress={() => { show('Changes discarded', 'info'); setTab('CA Components'); setFormDraft(null); }} style={{ flex: 1, minHeight: 35, paddingHorizontal: 12, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700 }}>Close Without Saving</Text>
+            </Pressable>
+            <Pressable onPress={() => { if (tab === 'Settings' && formDraft) saveEditConfiguration(); else { show('Changes saved in this session', 'success'); } }} style={{ flex: 1, minHeight: 35, paddingHorizontal: 12, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 700 }}>Save All Changes</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+
+      {/* Modals */}
+      <Modal visible={!!modal} transparent animationType="fade" onRequestClose={() => setModal(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(5,25,35,0.42)', alignItems: 'center', justifyContent: 'center', padding: 18 }} onPress={() => setModal(null)}>
+          <View style={{ width: '100%', maxWidth: 480, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 20, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <Text style={{ color: '#142F4D', fontSize: 17, fontWeight: 800 }}>{modal === 'component' ? (editingComponentId ? 'Edit CA Component' : 'Add CA Component') : modal === 'configuration' ? 'Add Configuration' : modal === 'editConfiguration' ? 'Edit Configuration Settings' : 'Configuration Actions'}</Text>
+              <Pressable onPress={() => setModal(null)}><X size={20} color="#647F9E" /></Pressable>
+            </View>
+            {modal === 'component' ? (
+              <View>
+                <View style={{ marginBottom: 13 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Component Name</Text>
+                  <TextInput value={componentDraft.name} onChangeText={v => setComponentDraft((old: any) => ({ ...old, name: v }))} placeholder="e.g. Assignment" placeholderTextColor="#8097B0" style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }} />
+                </View>
+                <View style={{ marginBottom: 13 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Maximum Marks</Text>
+                  <TextInput value={String(componentDraft.marks)} onChangeText={v => setComponentDraft((old: any) => ({ ...old, marks: v }))} keyboardType="numeric" style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }} />
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
+                  <Pressable onPress={() => setModal(null)} style={{ minHeight: 35, paddingHorizontal: 14, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700 }}>Cancel</Text></Pressable>
+                  <Pressable onPress={saveComponent} style={{ minHeight: 35, paddingHorizontal: 14, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 700 }}>Save Component</Text></Pressable>
+                </View>
+              </View>
+            ) : modal === 'configuration' || modal === 'editConfiguration' ? (
+              <View>
+                <View style={{ marginBottom: 13 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Subject</Text>
+                  <TextInput value={formDraft?.subject || ''} onChangeText={v => setFormDraft((old: any) => ({ ...old, subject: v }))} placeholder="Enter subject name" placeholderTextColor="#8097B0" style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }} />
+                </View>
+                <View style={{ marginBottom: 13 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Class</Text>
+                  <Pressable onPress={() => { const opts = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']; const cur = formDraft?.className || 'JSS1'; setFormDraft((old: any) => ({ ...old, className: opts[(opts.indexOf(cur) + 1) % opts.length] })); }} style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                    <Text style={{ color: '#142F4D', fontSize: 12 }}>{formDraft?.className || 'JSS1'}</Text>
+                    <ChevronDown size={15} color="#647F9E" />
+                  </Pressable>
+                </View>
+                <View style={{ marginBottom: 13 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>CA Maximum Marks</Text>
+                  <TextInput value={String(formDraft?.caMax || '')} onChangeText={v => setFormDraft((old: any) => ({ ...old, caMax: v }))} keyboardType="numeric" style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }} />
+                </View>
+                <View style={{ marginBottom: 13 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Examination Maximum Marks</Text>
+                  <TextInput value={String(formDraft?.examMax || '')} onChangeText={v => setFormDraft((old: any) => ({ ...old, examMax: v }))} keyboardType="numeric" style={{ minHeight: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }} />
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
+                  <Pressable onPress={() => setModal(null)} style={{ minHeight: 35, paddingHorizontal: 14, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700 }}>Cancel</Text></Pressable>
+                  <Pressable onPress={modal === 'configuration' ? saveConfiguration : saveEditConfiguration} style={{ minHeight: 35, paddingHorizontal: 14, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 700 }}>Save Configuration</Text></Pressable>
+                </View>
+              </View>
+            ) : (
+              <View>
+                <Text style={{ color: '#647F9E', fontSize: 12, marginBottom: 16 }}>Selected: {selected.className} — {selected.subject}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
+                  <Pressable onPress={deleteConfiguration} style={{ minHeight: 35, paddingHorizontal: 14, borderWidth: 1, borderColor: '#FFC6C8', borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#FFFFFF' }}>
+                    <Trash2 size={15} color="#D92E32" /><Text style={{ color: '#D92E32', fontSize: 11, fontWeight: 700 }}>Delete</Text>
+                  </Pressable>
+                  <Pressable onPress={openEditConfiguration} style={{ minHeight: 35, paddingHorizontal: 14, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#FFFFFF' }}>
+                    <Pencil size={15} color="#142F4D" /><Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700 }}>Edit Settings</Text>
+                  </Pressable>
+                  <Pressable onPress={() => setModal(null)} style={{ minHeight: 35, paddingHorizontal: 14, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#142F4D', fontSize: 11, fontWeight: 700 }}>Cancel</Text></Pressable>
+                </View>
+              </View>
+            )}
+          </View>
+        </Pressable>
+      </Modal>
+    </ScrollView>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -1059,13 +1463,15 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, and Students */}
+          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, and Assessment Configuration */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
           ) : active === 'Subjects & Classes' ? (
             <SubjectsAndClassesScreen search={search} show={show} />
           ) : active === 'Students' ? (
             <StudentsScreen search={search} show={show} />
+          ) : active === 'Assessment Configuration' ? (
+            <AssessmentConfigScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
