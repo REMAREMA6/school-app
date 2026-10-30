@@ -668,6 +668,8 @@ function StudentsScreen({ search: globalSearch, show }: { search: string; show: 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any>(null);
   const [form, setForm] = useState<any>({});
+  const [reportCardModal, setReportCardModal] = useState(false);
+  const [generateModal, setGenerateModal] = useState(false);
 
   const selectedStudent = students.find(s => s.id === selectedId) || null;
   const effectiveSearch = (search || globalSearch).trim().toLowerCase();
@@ -856,10 +858,10 @@ function StudentsScreen({ search: globalSearch, show }: { search: string; show: 
                   <Pressable onPress={openEdit} style={{ minHeight: 32, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#00513D', borderRadius: 5 }}>
                     <Pencil size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '700' }}>Edit Student</Text>
                   </Pressable>
-                  <Pressable onPress={() => show(`Report card view requested for ${selectedStudent.name}`, 'info')} style={{ minHeight: 32, paddingHorizontal: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                  <Pressable onPress={() => setReportCardModal(true)} style={{ minHeight: 32, paddingHorizontal: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
                     <FileText size={15} color="#274968" /><Text style={{ color: '#274968', fontSize: 9, fontWeight: '600' }}>View Report Card</Text>
                   </Pressable>
-                  <Pressable onPress={() => show(`Report card generation requested for ${selectedStudent.name}`, 'info')} style={{ minHeight: 32, paddingHorizontal: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                  <Pressable onPress={() => setGenerateModal(true)} style={{ minHeight: 32, paddingHorizontal: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
                     <Printer size={15} color="#274968" /><Text style={{ color: '#274968', fontSize: 9, fontWeight: '600' }}>Generate</Text>
                   </Pressable>
                 </View>
@@ -967,6 +969,136 @@ function StudentsScreen({ search: globalSearch, show }: { search: string; show: 
           </View>
         </Pressable>
       </Modal>
+
+      {/* View Report Card Modal — full report card preview */}
+      {selectedStudent && (
+        <Modal visible={reportCardModal} transparent animationType="fade" onRequestClose={() => setReportCardModal(false)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setReportCardModal(false)}>
+            <View style={{ width: '100%', maxWidth: 600, maxHeight: '90%', backgroundColor: '#FFFFFF', borderRadius: 10, overflow: 'hidden' }} onPress={(e: any) => e.stopPropagation()}>
+              {/* Action bar */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderBottomWidth: 1, borderBottomColor: '#E2EAF0', backgroundColor: '#FAFCFD' }}>
+                <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Report Card — {selectedStudent.name}</Text>
+                <View style={{ flexDirection: 'row', gap: 5 }}>
+                  <Pressable onPress={() => show(`PDF download requested for ${selectedStudent.name} (demo)`, 'info')} style={{ width: 30, height: 30, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Download size={14} color="#274968" /></Pressable>
+                  <Pressable onPress={() => show(`Print requested for ${selectedStudent.name} (demo)`, 'info')} style={{ width: 30, height: 30, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Printer size={14} color="#274968" /></Pressable>
+                  <Pressable onPress={() => setReportCardModal(false)} style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#59728F" /></Pressable>
+                </View>
+              </View>
+
+              <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+                {/* School header */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 14, borderBottomWidth: 2, borderBottomColor: '#00372D' }}>
+                  <Svg width={42} height={47} viewBox="0 0 64 72"><Path d="M7 8 L32 3 L57 8 L56 42 Q52 58 32 68 Q12 58 8 42 Z" fill="none" stroke="#075340" strokeWidth="3.2" /><Path d="M13 13 L32 9 L51 13 L50 41 Q46 53 32 61 Q18 53 14 41 Z" fill="none" stroke="#075340" strokeWidth="1.3" /><Path d="M21 23 L28 18 L32 25 L36 18 L43 23 L39 31 L44 42 L37 42 L32 34 L27 42 L20 42 L25 31 Z" fill="#075340" /><Circle cx="32" cy="15" r="2" fill="#075340" /></Svg>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#00372D', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 }}>Akoka Federal Academy</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 2 }}>12 Akoka Road, Yaba, Lagos</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 1 }}>Excellence · Discipline · Success</Text>
+                  </View>
+                  <View style={{ backgroundColor: '#00372D', borderRadius: 6, paddingHorizontal: 9, paddingVertical: 4 }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '800' }}>TERMLY REPORT</Text>
+                  </View>
+                </View>
+
+                {/* Student info */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, padding: 10, backgroundColor: '#F8FAFC', borderRadius: 6, borderWidth: 1, borderColor: '#E3EAF0' }}>
+                  {[['Student Name', selectedStudent.name], ['Admission No.', selectedStudent.admission], ['Class & Arm', selectedStudent.classArm], ['Session', selectedStudent.session], ['Term', 'Second Term'], ['Gender', selectedStudent.gender]].map(([label, value]: any) => (
+                    <View key={label} style={{ flexBasis: '47%', flexGrow: 1, minWidth: 130 }}>
+                      <Text style={{ color: '#647F9E', fontSize: 8, fontWeight: '700' }}>{label.toUpperCase()}</Text>
+                      <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: '700', marginTop: 2 }}>{value}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Subject scores table */}
+                <View style={{ marginTop: 12, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, overflow: 'hidden' }}>
+                  <View style={{ flexDirection: 'row', backgroundColor: '#00372D', paddingVertical: 8 }}>
+                    {['Subject', 'CA /40', 'Exam /60', 'Total /100', 'Grade', 'Remark'].map((h, i) => (
+                      <Text key={h} style={{ flex: [2, 0.9, 0.9, 1, 0.7, 1.3][i], color: '#FFFFFF', fontSize: 9, fontWeight: '800', textAlign: i === 0 || i === 5 ? 'left' : 'center', paddingHorizontal: 6 }}>{h}</Text>
+                    ))}
+                  </View>
+                  {REPORT_CARD_SUBJECTS.map((s, i) => {
+                    const [gbg, gfg] = GRADE_COLORS[s.grade] || ['#E2EAF0', '#334F6E'];
+                    return (
+                      <View key={s.subject} style={{ flexDirection: 'row', paddingVertical: 9, backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#F8FAFC', borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                        <Text numberOfLines={1} style={{ flex: 2, color: '#142F4D', fontSize: 10, fontWeight: '600', paddingHorizontal: 6 }}>{s.subject}</Text>
+                        <Text style={{ flex: 0.9, color: '#244361', fontSize: 10, textAlign: 'center' }}>{s.ca}</Text>
+                        <Text style={{ flex: 0.9, color: '#244361', fontSize: 10, textAlign: 'center' }}>{s.exam}</Text>
+                        <Text style={{ flex: 1, color: '#142F4D', fontSize: 11, fontWeight: '800', textAlign: 'center' }}>{s.total}</Text>
+                        <View style={{ flex: 0.7, alignItems: 'center' }}><View style={{ backgroundColor: gbg, borderRadius: 4, paddingHorizontal: 7, paddingVertical: 2 }}><Text style={{ color: gfg, fontSize: 9, fontWeight: '800' }}>{s.grade}</Text></View></View>
+                        <Text numberOfLines={1} style={{ flex: 1.3, color: '#244361', fontSize: 9, paddingHorizontal: 6 }}>{s.remark}</Text>
+                      </View>
+                    );
+                  })}
+                  <View style={{ flexDirection: 'row', paddingVertical: 10, backgroundColor: '#F0F7F4', borderTopWidth: 2, borderTopColor: '#08765F' }}>
+                    <Text style={{ flex: 2, color: '#00372D', fontSize: 10, fontWeight: '800', paddingHorizontal: 6 }}>TOTAL</Text>
+                    <Text style={{ flex: 0.9, color: '#08754F', fontSize: 10, fontWeight: '800', textAlign: 'center' }}>268</Text>
+                    <Text style={{ flex: 0.9, color: '#08754F', fontSize: 10, fontWeight: '800', textAlign: 'center' }}>395</Text>
+                    <Text style={{ flex: 1, color: '#08754F', fontSize: 11, fontWeight: '800', textAlign: 'center' }}>663</Text>
+                    <Text style={{ flex: 0.7 }} />
+                    <Text style={{ flex: 1.3, color: '#647F9E', fontSize: 9, paddingHorizontal: 6 }}>Out of 800</Text>
+                  </View>
+                </View>
+
+                {/* Summary stats */}
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                  {[['Overall Average', '83.4%'], ['Subjects Offered', '8'], ['Class Position', '3rd of 14']].map(([label, value]: any) => (
+                    <View key={label} style={{ flex: 1, padding: 10, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FAFCFD', alignItems: 'center' }}>
+                      <Text style={{ color: '#647F9E', fontSize: 9, fontWeight: '700' }}>{label.toUpperCase()}</Text>
+                      <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800', marginTop: 4 }}>{value}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Teacher's + Principal's comments */}
+                <View style={{ marginTop: 12 }}>
+                  <Text style={{ color: '#00372D', fontSize: 11, fontWeight: '800', marginBottom: 5 }}>Class Teacher's Comment</Text>
+                  <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, padding: 10, backgroundColor: '#FAFCFD', marginBottom: 10 }}>
+                    <Text style={{ color: '#244361', fontSize: 10, lineHeight: 15, fontStyle: 'italic' }}>"A diligent and respectful student. {selectedStudent.name.split(' ')[0]} has shown consistent improvement this term and participates actively in class discussions. Keep up the excellent work."</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 9, marginTop: 6 }}>— Mrs. O. Bello (Form Teacher, {selectedStudent.classArm})</Text>
+                  </View>
+                  <Text style={{ color: '#00372D', fontSize: 11, fontWeight: '800', marginBottom: 5 }}>Principal's Comment</Text>
+                  <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, padding: 10, backgroundColor: '#FAFCFD' }}>
+                    <Text style={{ color: '#244361', fontSize: 10, lineHeight: 15, fontStyle: 'italic' }}>"An impressive performance this term. We look forward to continued excellence in the coming session."</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 9, marginTop: 6 }}>— Mr. A. Adeyemi (Principal)</Text>
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
+                <Pressable onPress={() => setReportCardModal(false)} style={{ paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Close</Text></Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* Generate Report Card Modal */}
+      {selectedStudent && (
+        <Modal visible={generateModal} transparent animationType="fade" onRequestClose={() => setGenerateModal(false)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setGenerateModal(false)}>
+            <View style={{ width: '100%', maxWidth: 460, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+                <View><Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>Generate Report Card</Text><Text style={{ color: '#647F9E', fontSize: 11, marginTop: 3 }}>Create a printable report card for {selectedStudent.name}.</Text></View>
+                <Pressable onPress={() => setGenerateModal(false)}><X size={19} color="#41698F" /></Pressable>
+              </View>
+              <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 6, padding: 12, marginBottom: 14, backgroundColor: '#F8FAFC' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: STU_TONES[selectedStudent.tone]?.[0] || '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: STU_TONES[selectedStudent.tone]?.[1] || '#075B46', fontSize: 14, fontWeight: '800' }}>{selectedStudent.initials}</Text></View>
+                  <View><Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '700' }}>{selectedStudent.name}</Text><Text style={{ color: '#647F9E', fontSize: 10, marginTop: 2 }}>{selectedStudent.admission} · {selectedStudent.classArm}</Text></View>
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 12, borderWidth: 1, borderColor: '#FFE1B5', backgroundColor: '#FFF7E6', borderRadius: 6, marginBottom: 14 }}>
+                <AlertCircle size={15} color="#D58A13" />
+                <Text style={{ color: '#6B5A3F', fontSize: 10, flex: 1, lineHeight: 14 }}>Generation compiles verified scores for {selectedStudent.name} for Second Term 2024/2025 into a print-ready PDF. This is a demo — no real PDF will be produced. Wire to the Report Cards screen + PDF service for production.</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+                <Pressable onPress={() => setGenerateModal(false)} style={{ minHeight: 35, paddingHorizontal: 16, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+                <Pressable onPress={() => { setGenerateModal(false); setReportCardModal(true); show(`Report card generated for ${selectedStudent.name} (demo)`, 'success'); }} style={{ minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 7 }}><Printer size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Generate & Preview</Text></Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 }
