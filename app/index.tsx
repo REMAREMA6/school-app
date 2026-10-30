@@ -1423,6 +1423,7 @@ function UsersPermissionsScreen({ search: globalSearch, show }: { search: string
   const [addModal, setAddModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
+  const [profileModal, setProfileModal] = useState(false);
   const [rowActions, setRowActions] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [addForm, setAddForm] = useState<any>({ name: '', email: '', phone: '', role: 'Subject Teacher', gender: 'Male', status: 'Active' });
@@ -1629,7 +1630,7 @@ function UsersPermissionsScreen({ search: globalSearch, show }: { search: string
                   <Pressable onPress={() => { setEditForm({ ...selectedUser }); setEditModal(true); }} style={{ minHeight: 32, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#00513D', borderRadius: 5 }}>
                     <Pencil size={13} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '700' }}>Edit User</Text>
                   </Pressable>
-                  <Pressable onPress={() => show(`Opening profile for ${selectedUser.name}`, 'info')} style={{ minHeight: 32, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                  <Pressable onPress={() => setProfileModal(true)} style={{ minHeight: 32, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
                     <Eye size={13} color="#274968" /><Text style={{ color: '#274968', fontSize: 9, fontWeight: '600' }}>View Profile</Text>
                   </Pressable>
                   <Pressable onPress={() => setResetConfirm(true)} style={{ minHeight: 32, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#FFC6C8', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
@@ -1879,6 +1880,101 @@ function UsersPermissionsScreen({ search: globalSearch, show }: { search: string
           </View>
         </Pressable>
       </Modal>
+
+      {/* View Profile Modal */}
+      {selectedUser && (
+        <Modal visible={profileModal} transparent animationType="fade" onRequestClose={() => setProfileModal(false)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setProfileModal(false)}>
+            <View style={{ width: '100%', maxWidth: 540, maxHeight: '90%', backgroundColor: '#FFFFFF', borderRadius: 10, overflow: 'hidden' }} onPress={(e: any) => e.stopPropagation()}>
+              {/* Header banner */}
+              <View style={{ backgroundColor: '#00372D', padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: USER_TONES[selectedUser.tone]?.[0] || '#DFF5E9', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' }}>
+                  <Text style={{ color: USER_TONES[selectedUser.tone]?.[1] || '#075B46', fontSize: 19, fontWeight: '800' }}>{selectedUser.initials}</Text>
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '800' }} numberOfLines={1}>{selectedUser.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 }}>
+                    <View style={{ backgroundColor: ROLE_BADGE[selectedUser.role]?.[0] || '#E2EAF0', borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: ROLE_BADGE[selectedUser.role]?.[1] || '#334F6E', fontSize: 9, fontWeight: '700' }}>{selectedUser.role}</Text></View>
+                    <View style={{ backgroundColor: selectedUser.status === 'Active' ? '#D7F3E5' : '#FFE5E5', borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: selectedUser.status === 'Active' ? '#075B46' : '#D92E32', fontSize: 9, fontWeight: '700' }}>{selectedUser.status}</Text></View>
+                  </View>
+                </View>
+                <Pressable onPress={() => setProfileModal(false)}><X size={20} color="#FFFFFF" /></Pressable>
+              </View>
+
+              <ScrollView contentContainerStyle={{ padding: 18 }} showsVerticalScrollIndicator={false}>
+                {/* Contact */}
+                <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Contact Information</Text>
+                <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 6, padding: 12, marginBottom: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 }}>
+                    <Mail size={14} color="#647F9E" />
+                    <Text style={{ color: '#244361', fontSize: 11, flex: 1 }}>{selectedUser.email}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 }}>
+                    <Phone size={14} color="#647F9E" />
+                    <Text style={{ color: '#244361', fontSize: 11, flex: 1 }}>{selectedUser.phone}</Text>
+                  </View>
+                </View>
+
+                {/* Personal */}
+                <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Personal Information</Text>
+                <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 6, marginBottom: 16 }}>
+                  {[['Full Name', selectedUser.name], ['Role', selectedUser.role], ['Gender', selectedUser.gender], ['Date Joined', selectedUser.dateJoined]].map(([l, v]: any, i: number) => (
+                    <View key={l} style={{ flexDirection: 'row', paddingVertical: 9, paddingHorizontal: 12, borderBottomWidth: i < 3 ? 1 : 0, borderBottomColor: '#E8EEF3' }}>
+                      <Text style={{ flex: 1, color: '#647F9E', fontSize: 11 }}>{l}</Text>
+                      <Text style={{ flex: 1.3, color: '#244361', fontSize: 11, fontWeight: '600' }}>{v}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Assignments */}
+                <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Class & Subject Assignments</Text>
+                <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 6, padding: 12, marginBottom: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={{ color: '#647F9E', fontSize: 10, fontWeight: '700' }}>CLASSES</Text>
+                    <View style={{ backgroundColor: '#DFF5E9', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}><Text style={{ color: '#075B46', fontSize: 9, fontWeight: '700' }}>{selectedUser.classes === '—' ? '0' : selectedUser.classes.split(',').length} assigned</Text></View>
+                  </View>
+                  {selectedUser.classes === '—' ? <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 12 }}>No classes assigned</Text> : (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                      {selectedUser.classes.split(', ').map((c: string) => (
+                        <View key={c} style={{ backgroundColor: '#E2F4EC', borderWidth: 1, borderColor: '#B8E3D0', borderRadius: 14, paddingHorizontal: 11, paddingVertical: 5 }}><Text style={{ color: '#075B46', fontSize: 10, fontWeight: '700' }}>{c}</Text></View>
+                      ))}
+                    </View>
+                  )}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={{ color: '#647F9E', fontSize: 10, fontWeight: '700' }}>SUBJECTS</Text>
+                    <View style={{ backgroundColor: '#E0ECFF', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}><Text style={{ color: '#176DDA', fontSize: 9, fontWeight: '700' }}>{selectedUser.subjects === '—' ? '0' : selectedUser.subjects.split(',').length} assigned</Text></View>
+                  </View>
+                  {selectedUser.subjects === '—' ? <Text style={{ color: '#647F9E', fontSize: 11 }}>No subjects assigned</Text> : (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                      {selectedUser.subjects.split(', ').map((s: string) => (
+                        <View key={s} style={{ backgroundColor: '#E0ECFF', borderWidth: 1, borderColor: '#B8CFE3', borderRadius: 14, paddingHorizontal: 11, paddingVertical: 5 }}><Text style={{ color: '#176DDA', fontSize: 10, fontWeight: '700' }}>{s}</Text></View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Recent Activity */}
+                <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>Recent Activity</Text>
+                <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 6, padding: 12 }}>
+                  {selectedUser.activity.map(([title, time]: any, i: number) => (
+                    <View key={i} style={{ minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={{ width: 13, alignItems: 'center' }}>{i === 0 && <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#08765F' }} />}</View>
+                      <Text style={{ color: '#244361', fontSize: 11, flex: 1 }}>{title}</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 9 }}>{time}</Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+
+              {/* Footer */}
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, paddingHorizontal: 18, paddingVertical: 13, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
+                <Pressable onPress={() => setProfileModal(false)} style={{ paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Close</Text></Pressable>
+                <Pressable onPress={() => { setProfileModal(false); setEditForm({ ...selectedUser }); setEditModal(true); }} style={{ backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9 }}><Pencil size={13} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Edit User</Text></Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 }
