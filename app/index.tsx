@@ -12,7 +12,7 @@ import {
   Languages, Calculator, Globe2, Code2, Leaf, Scale, TrendingUp, Microscope,
   ChevronLeft, ChevronRight, Printer, ShieldCheck, Clock3, User as UserIcon,
   Trophy, GripVertical, SlidersHorizontal, Mail, Phone, KeyRound, Briefcase,
-  FileSpreadsheet, Upload, ArrowRight as ArrowRightIcon, RefreshCw,
+  FileSpreadsheet, Upload, ArrowRight as ArrowRightIcon, RefreshCw, Download,
 } from 'lucide-react-native';
 
 const C = {
@@ -2908,6 +2908,408 @@ function ReviewCompileScreen({ search: globalSearch, show }: { search: string; s
 // Helper used by ReviewCompileScreen — returns the seed batches array (kept separate for clarity)
 function REVIEW_BATCHS_INIT() { return REVIEW_BATCHES.map(b => ({ ...b })); }
 
+// === REPORT CARDS DATA ===
+const REPORT_CARDS_DATA = [
+  { id: '1', studentName: 'Hajara Abubakar', admission: 'AK/2024/0012', initials: 'HA', tone: 'green', classArm: 'JSS1A', session: '2024/2025', term: 'Second Term', status: 'Published', generatedDate: 'Aug 25, 2025', average: 84.6, position: '3rd of 14', subjectsCount: 8 },
+  { id: '2', studentName: 'Chukwuemeka Okafor', admission: 'AK/2023/0084', initials: 'CO', tone: 'blue', classArm: 'SS2B', session: '2024/2025', term: 'Second Term', status: 'Published', generatedDate: 'Aug 25, 2025', average: 79.3, position: '5th of 19', subjectsCount: 9 },
+  { id: '3', studentName: 'Amina Ibrahim', admission: 'AK/2024/0031', initials: 'AI', tone: 'purple', classArm: 'JSS2A', session: '2024/2025', term: 'Second Term', status: 'Ready for Review', generatedDate: 'Aug 24, 2025', average: 81.0, position: '4th of 19', subjectsCount: 8 },
+  { id: '4', studentName: 'Oluwaseun Adeyemi', admission: 'AK/2022/0068', initials: 'OA', tone: 'blue', classArm: 'SS3A', session: '2024/2025', term: 'Second Term', status: 'Published', generatedDate: 'Aug 25, 2025', average: 87.8, position: '1st of 18', subjectsCount: 9 },
+  { id: '5', studentName: 'Ifeoma Nwosu', admission: 'AK/2023/0045', initials: 'IN', tone: 'purple', classArm: 'SS1B', session: '2024/2025', term: 'Second Term', status: 'Draft', generatedDate: 'Aug 23, 2025', average: 72.0, position: '8th of 15', subjectsCount: 9 },
+  { id: '6', studentName: 'Abdulrahman Bello', admission: 'AK/2024/0076', initials: 'AB', tone: 'green', classArm: 'JSS2B', session: '2024/2025', term: 'Second Term', status: 'Ready for Review', generatedDate: 'Aug 24, 2025', average: 77.4, position: '6th of 19', subjectsCount: 8 },
+  { id: '7', studentName: 'Zainab Yusuf', admission: 'AK/2023/0029', initials: 'ZY', tone: 'purple', classArm: 'SS3B', session: '2024/2025', term: 'Second Term', status: 'Published', generatedDate: 'Aug 25, 2025', average: 88.9, position: '1st of 17', subjectsCount: 9 },
+  { id: '8', studentName: 'Tunde Balogun', admission: 'AK/2024/0057', initials: 'TB', tone: 'blue', classArm: 'JSS1B', session: '2024/2025', term: 'Second Term', status: 'Draft', generatedDate: 'Aug 23, 2025', average: 70.5, position: '9th of 13', subjectsCount: 8 },
+  { id: '9', studentName: 'Fatima Hashim', admission: 'AK/2024/0061', initials: 'FH', tone: 'orange', classArm: 'JSS3B', session: '2024/2025', term: 'Second Term', status: 'Ready for Review', generatedDate: 'Aug 24, 2025', average: 75.8, position: '7th of 18', subjectsCount: 8 },
+  { id: '10', studentName: 'Ibrahim Musa', admission: 'AK/2023/0074', initials: 'IM', tone: 'green', classArm: 'SS3A', session: '2024/2025', term: 'Second Term', status: 'Published', generatedDate: 'Aug 25, 2025', average: 85.4, position: '2nd of 18', subjectsCount: 9 },
+];
+
+const REPORT_CARD_SUBJECTS = [
+  { subject: 'Mathematics', ca: 32, exam: 52, total: 84, grade: 'B2', remark: 'Very Good' },
+  { subject: 'English Language', ca: 35, exam: 49, total: 84, grade: 'B2', remark: 'Very Good' },
+  { subject: 'Basic Science', ca: 36, exam: 51, total: 87, grade: 'A1', remark: 'Excellent' },
+  { subject: 'Social Studies', ca: 33, exam: 48, total: 81, grade: 'B2', remark: 'Very Good' },
+  { subject: 'Civic Education', ca: 34, exam: 50, total: 84, grade: 'B2', remark: 'Very Good' },
+  { subject: 'Mathematics (Practical)', ca: 30, exam: 47, total: 77, grade: 'B3', remark: 'Good' },
+  { subject: 'Computer Studies', ca: 37, exam: 53, total: 90, grade: 'A1', remark: 'Excellent' },
+  { subject: 'Agricultural Science', ca: 31, exam: 45, total: 76, grade: 'B3', remark: 'Good' },
+];
+
+const GRADE_COLORS: Record<string, [string, string]> = {
+  'A1': ['#D9F4E6', '#08754F'],
+  'B2': ['#DFF5E9', '#08704F'],
+  'B3': ['#E0ECFF', '#176DDA'],
+  'C4': ['#E0ECFF', '#176DDA'],
+  'C5': ['#EFE3FF', '#6E35D4'],
+  'C6': ['#EFE3FF', '#6E35D4'],
+  'D7': ['#FFF0D4', '#C27A08'],
+  'E8': ['#FFE1E1', '#D92E32'],
+  'F9': ['#FFE1E1', '#D92E32'],
+};
+
+const REPORT_STATUS_COLORS: Record<string, [string, string]> = {
+  'Published': ['#D9F4E6', '#08754F'],
+  'Ready for Review': ['#FFF0D4', '#C27A08'],
+  'Draft': ['#E0ECFF', '#176DDA'],
+};
+
+// === REPORT CARDS SCREEN ===
+function ReportCardsScreen({ search: globalSearch, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 1180;
+  const [cards, setCards] = useState(REPORT_CARDS_DATA);
+  const [selectedId, setSelectedId] = useState<string | null>('1');
+  const [search, setSearch] = useState('');
+  const [classFilter, setClassFilter] = useState('All Classes');
+  const [statusFilter, setStatusFilter] = useState('All Statuses');
+  const [page, setPage] = useState(1);
+  const [rowActions, setRowActions] = useState<string | null>(null);
+  const [bulkModal, setBulkModal] = useState(false);
+  const [bulkForm, setBulkForm] = useState({ classArm: 'JSS1A', term: 'Second Term' });
+
+  const selected = cards.find(c => c.id === selectedId) || null;
+  const classes = ['All Classes', 'JSS1A', 'JSS1B', 'JSS2A', 'JSS2B', 'JSS3B', 'SS1B', 'SS2B', 'SS3A', 'SS3B'];
+  const statuses = ['All Statuses', 'Published', 'Ready for Review', 'Draft'];
+
+  const effectiveSearch = (search || globalSearch).trim().toLowerCase();
+  const filtered = useMemo(() => cards.filter(c => {
+    const matchesSearch = !effectiveSearch || `${c.studentName} ${c.admission} ${c.classArm}`.toLowerCase().includes(effectiveSearch);
+    const matchesClass = classFilter === 'All Classes' || c.classArm === classFilter;
+    const matchesStatus = statusFilter === 'All Statuses' || c.status === statusFilter;
+    return matchesSearch && matchesClass && matchesStatus;
+  }), [cards, effectiveSearch, classFilter, statusFilter]);
+
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const visible = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const publishedCount = cards.filter(c => c.status === 'Published').length;
+  const readyCount = cards.filter(c => c.status === 'Ready for Review').length;
+  const draftCount = cards.filter(c => c.status === 'Draft').length;
+
+  function publishCard(id: string) {
+    setCards(curr => curr.map(c => c.id === id ? { ...c, status: 'Published', generatedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) } : c));
+    setRowActions(null);
+    show(`Report card published for ${cards.find(c => c.id === id)?.studentName}`, 'success');
+  }
+  function unpublishCard(id: string) {
+    setCards(curr => curr.map(c => c.id === id ? { ...c, status: 'Ready for Review' } : c));
+    setRowActions(null);
+    show(`Report card moved back to review`, 'info');
+  }
+  function generateBulk() {
+    show(`Bulk generation started for ${bulkForm.classArm} — ${bulkForm.term} (demo only)`, 'info');
+    setBulkModal(false);
+  }
+
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', minHeight: 0 }}>
+      <ScrollView style={{ flex: 1, minWidth: 0 }} contentContainerStyle={{ padding: 24, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+        {/* Page header */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 15, marginBottom: 18, flexWrap: 'wrap' }}>
+          <View style={{ flex: 1, minWidth: 280 }}>
+            <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Report Cards</Text>
+            <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>View, generate, download, and print individual student report cards.</Text>
+          </View>
+          <Pressable onPress={() => setBulkModal(true)} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 37, paddingHorizontal: 15 }}>
+            <Plus size={16} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Bulk Generate</Text>
+          </Pressable>
+        </View>
+
+        {/* Stats row */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+          {[['Total Report Cards', String(cards.length), 'Across all classes', 'green', FileText], ['Published', String(publishedCount), 'Ready to distribute', 'blue', CheckCircle2], ['Ready for Review', String(readyCount), 'Awaiting approval', 'orange', AlertCircle], ['Draft', String(draftCount), 'Incomplete results', 'purple', FileText]].map(([label, value, sub, tone, Ic]: any) => {
+            const tones: Record<string, [string, string]> = { green: ['#DFF5E9', '#08754F'], blue: ['#E0ECFF', '#176DDA'], orange: ['#FFF0D4', '#C27A08'], purple: ['#EFE3FF', '#6E35D4'] };
+            const [bg, fg] = tones[tone];
+            return (
+              <View key={label} style={{ flex: 1, minWidth: 200, minHeight: 110, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 17, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}><Ic size={24} color={fg} /></View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{label}</Text>
+                  <Text style={{ color: '#142F4D', fontSize: 24, fontWeight: '800', marginTop: 4 }}>{value}</Text>
+                  <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 6 }}>{sub}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Directory card */}
+        <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 14 }}>
+          {/* Filters */}
+          <View style={{ flexDirection: 'row', gap: 9, marginBottom: 10, flexWrap: 'wrap' }}>
+            <View style={{ flex: 1, minWidth: 200, height: 36, flexDirection: 'row', alignItems: 'center', gap: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, backgroundColor: '#FFFFFF' }}>
+              <Search size={16} color="#8299B1" />
+              <TextInput value={search} onChangeText={v => { setSearch(v); setPage(1); }} placeholder="Search by student name or admission number..." placeholderTextColor="#8097B0" style={{ flex: 1, fontSize: 11, color: '#142F4D', padding: 0 }} />
+            </View>
+            <Pressable onPress={() => { setClassFilter(classes[(classes.indexOf(classFilter) + 1) % classes.length]); setPage(1); }} style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{classFilter}</Text><ChevronDown size={15} color="#41698F" />
+            </Pressable>
+            <Pressable onPress={() => { setStatusFilter(statuses[(statuses.indexOf(statusFilter) + 1) % statuses.length]); setPage(1); }} style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{statusFilter}</Text><ChevronDown size={15} color="#41698F" />
+            </Pressable>
+          </View>
+
+          {/* Filter chips */}
+          <View style={{ flexDirection: 'row', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}>
+            {statuses.map(item => (
+              <Pressable key={item} onPress={() => { setStatusFilter(item); setPage(1); }} style={{ paddingHorizontal: 9, paddingVertical: 5, borderRadius: 5, borderWidth: 1, borderColor: statusFilter === item ? '#B8E3D0' : '#DCE6EE', backgroundColor: statusFilter === item ? '#E2F4EC' : 'transparent' }}>
+                <Text style={{ fontSize: 10, fontWeight: statusFilter === item ? '700' : '500', color: statusFilter === item ? '#075B46' : '#41698F' }}>{item}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Table */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ minWidth: 1000 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 38, paddingHorizontal: 10, backgroundColor: '#F0F3F6', borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
+                {['Student', 'Admission No.', 'Class', 'Term', 'Average', 'Position', 'Status', 'Actions'].map((h, i) => (
+                  <Text key={h} style={{ width: [170, 130, 75, 130, 75, 100, 130, 90][i], fontSize: 10, fontWeight: '800', color: '#244361', paddingRight: 5 }}>{h}</Text>
+                ))}
+              </View>
+              {visible.map(c => {
+                const [bg, fg] = STU_TONES[c.tone] || STU_TONES.green;
+                const [sbg, sfg] = REPORT_STATUS_COLORS[c.status] || ['#E2EAF0', '#334F6E'];
+                return (
+                  <Pressable key={c.id} onPress={() => setSelectedId(c.id)} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 49, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#E8EEF3', backgroundColor: selectedId === c.id ? '#E4F6ED' : 'transparent' }}>
+                    <View style={{ width: 170, flexDirection: 'row', alignItems: 'center', gap: 10, paddingRight: 8 }}>
+                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Text style={{ color: fg, fontSize: 12, fontWeight: '800' }}>{c.initials}</Text></View>
+                      <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 11, fontWeight: '700', flexShrink: 1 }}>{c.studentName}</Text>
+                    </View>
+                    <Text numberOfLines={1} style={{ width: 130, fontSize: 10, color: '#244361', paddingRight: 5 }}>{c.admission}</Text>
+                    <Text style={{ width: 75, fontSize: 10, color: '#244361', paddingRight: 5 }}>{c.classArm}</Text>
+                    <Text numberOfLines={1} style={{ width: 130, fontSize: 10, color: '#244361', paddingRight: 5 }}>{c.term}</Text>
+                    <Text style={{ width: 75, fontSize: 10, color: '#244361', fontWeight: '700', paddingRight: 5 }}>{c.average.toFixed(1)}%</Text>
+                    <Text numberOfLines={1} style={{ width: 100, fontSize: 10, color: '#244361', paddingRight: 5 }}>{c.position}</Text>
+                    <View style={{ width: 130 }}><View style={{ backgroundColor: sbg, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' }}><Text style={{ color: sfg, fontSize: 9, fontWeight: '700' }}>{c.status}</Text></View></View>
+                    <View style={{ width: 90, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Pressable onPress={() => setSelectedId(c.id)} style={{ width: 28, height: 28, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Eye size={14} color="#274968" /></Pressable>
+                      <Pressable onPress={() => setRowActions(rowActions === c.id ? null : c.id)} style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center' }}><MoreVertical size={16} color="#41698F" /></Pressable>
+                      {rowActions === c.id && (
+                        <View style={{ position: 'absolute', top: 30, right: 0, width: 160, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, zIndex: 100, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}>
+                          {[['Download PDF', () => { show(`PDF download requested for ${c.studentName} (demo)`, 'info'); setRowActions(null); }], ['Print', () => { show(`Print requested for ${c.studentName} (demo)`, 'info'); setRowActions(null); }], c.status === 'Published' ? ['Unpublish', () => unpublishCard(c.id)] : ['Publish', () => publishCard(c.id)]].map(([label, action]: any) => (
+                            <Pressable key={label} onPress={action} style={{ paddingHorizontal: 12, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '500' }}>{label}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+              {!visible.length && <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#647F9E', fontSize: 12 }}>No report cards match your filters.</Text></View>}
+            </View>
+          </ScrollView>
+
+          {/* Pagination */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 12 }}>
+            <Text style={{ color: '#647F9E', fontSize: 10 }}>Showing {filtered.length ? (safePage - 1) * pageSize + 1 : 0}–{Math.min(safePage * pageSize, filtered.length)} of {filtered.length} report cards</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Pressable onPress={() => setPage(Math.max(1, safePage - 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronLeft size={16} color="#41698F" /></Pressable>
+              {Array.from({ length: Math.min(2, pageCount) }, (_, i) => i + 1).map(number => (
+                <Pressable key={number} onPress={() => setPage(number)} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: safePage === number ? '#006044' : '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: safePage === number ? '#006044' : '#FFFFFF' }}>
+                  <Text style={{ color: safePage === number ? '#FFFFFF' : '#41698F', fontSize: 11, fontWeight: safePage === number ? '800' : '500' }}>{number}</Text>
+                </Pressable>
+              ))}
+              <Pressable onPress={() => setPage(Math.min(pageCount, safePage + 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronRight size={16} color="#41698F" /></Pressable>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Right — Report Card Preview Panel */}
+      {!compact && (
+        <View style={{ width: 480, borderLeftWidth: 2, borderLeftColor: '#D5E0E8', backgroundColor: '#F8FAFC', padding: 16 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 14 }} showsVerticalScrollIndicator={false}>
+            {!selected ? (
+              <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 28, alignItems: 'center', gap: 10 }}>
+                <FileText size={34} color="#9BAEC0" />
+                <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '700' }}>Select a report card</Text>
+                <Text style={{ color: '#647F9E', fontSize: 11, textAlign: 'center' }}>Choose a student from the directory to preview their report card.</Text>
+              </View>
+            ) : (
+              <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, overflow: 'hidden' }}>
+                {/* Action bar */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 10, borderBottomWidth: 1, borderBottomColor: '#E2EAF0', backgroundColor: '#FAFCFD' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800' }}>Report Card Preview</Text>
+                  <View style={{ flexDirection: 'row', gap: 5 }}>
+                    <Pressable onPress={() => show(`PDF download requested for ${selected.studentName} (demo)`, 'info')} style={{ width: 30, height: 30, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Download size={14} color="#274968" /></Pressable>
+                    <Pressable onPress={() => show(`Print requested for ${selected.studentName} (demo)`, 'info')} style={{ width: 30, height: 30, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Printer size={14} color="#274968" /></Pressable>
+                    <Pressable onPress={() => setSelectedId(null)} style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#59728F" /></Pressable>
+                  </View>
+                </View>
+
+                {/* Report card document */}
+                <View style={{ padding: 16 }}>
+                  {/* School header */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 14, borderBottomWidth: 2, borderBottomColor: '#00372D' }}>
+                    <Svg width={42} height={47} viewBox="0 0 64 72"><Path d="M7 8 L32 3 L57 8 L56 42 Q52 58 32 68 Q12 58 8 42 Z" fill="none" stroke="#075340" strokeWidth="3.2" /><Path d="M13 13 L32 9 L51 13 L50 41 Q46 53 32 61 Q18 53 14 41 Z" fill="none" stroke="#075340" strokeWidth="1.3" /><Path d="M21 23 L28 18 L32 25 L36 18 L43 23 L39 31 L44 42 L37 42 L32 34 L27 42 L20 42 L25 31 Z" fill="#075340" /><Circle cx="32" cy="15" r="2" fill="#075340" /></Svg>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#00372D', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 }}>Akoka Federal Academy</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 2 }}>12 Akoka Road, Yaba, Lagos</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 1 }}>Excellence · Discipline · Success</Text>
+                    </View>
+                    <View style={{ backgroundColor: '#00372D', borderRadius: 6, paddingHorizontal: 9, paddingVertical: 4 }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '800' }}>TERMLY REPORT</Text>
+                    </View>
+                  </View>
+
+                  {/* Student info */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, padding: 10, backgroundColor: '#F8FAFC', borderRadius: 6, borderWidth: 1, borderColor: '#E3EAF0' }}>
+                    {[
+                      ['Student Name', selected.studentName],
+                      ['Admission No.', selected.admission],
+                      ['Class & Arm', selected.classArm],
+                      ['Session', selected.session],
+                      ['Term', selected.term],
+                      ['Date Generated', selected.generatedDate],
+                    ].map(([label, value]: any) => (
+                      <View key={label} style={{ flexBasis: '47%', flexGrow: 1, minWidth: 130 }}>
+                        <Text style={{ color: '#647F9E', fontSize: 8, fontWeight: '700' }}>{label.toUpperCase()}</Text>
+                        <Text style={{ color: '#142F4D', fontSize: 11, fontWeight: '700', marginTop: 2 }}>{value}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Subject scores table */}
+                  <View style={{ marginTop: 12, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, overflow: 'hidden' }}>
+                    <View style={{ flexDirection: 'row', backgroundColor: '#00372D', paddingVertical: 8 }}>
+                      {['Subject', 'CA /40', 'Exam /60', 'Total /100', 'Grade', 'Remark'].map((h, i) => (
+                        <Text key={h} style={{ flex: [2, 0.9, 0.9, 1, 0.7, 1.3][i], color: '#FFFFFF', fontSize: 9, fontWeight: '800', textAlign: i === 0 || i === 5 ? 'left' : 'center', paddingHorizontal: 6 }}>{h}</Text>
+                      ))}
+                    </View>
+                    {REPORT_CARD_SUBJECTS.map((s, i) => {
+                      const [gbg, gfg] = GRADE_COLORS[s.grade] || ['#E2EAF0', '#334F6E'];
+                      return (
+                        <View key={s.subject} style={{ flexDirection: 'row', paddingVertical: 9, backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#F8FAFC', borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                          <Text numberOfLines={1} style={{ flex: 2, color: '#142F4D', fontSize: 10, fontWeight: '600', paddingHorizontal: 6 }}>{s.subject}</Text>
+                          <Text style={{ flex: 0.9, color: '#244361', fontSize: 10, textAlign: 'center' }}>{s.ca}</Text>
+                          <Text style={{ flex: 0.9, color: '#244361', fontSize: 10, textAlign: 'center' }}>{s.exam}</Text>
+                          <Text style={{ flex: 1, color: '#142F4D', fontSize: 11, fontWeight: '800', textAlign: 'center' }}>{s.total}</Text>
+                          <View style={{ flex: 0.7, alignItems: 'center' }}><View style={{ backgroundColor: gbg, borderRadius: 4, paddingHorizontal: 7, paddingVertical: 2 }}><Text style={{ color: gfg, fontSize: 9, fontWeight: '800' }}>{s.grade}</Text></View></View>
+                          <Text numberOfLines={1} style={{ flex: 1.3, color: '#244361', fontSize: 9, paddingHorizontal: 6 }}>{s.remark}</Text>
+                        </View>
+                      );
+                    })}
+                    {/* Totals row */}
+                    <View style={{ flexDirection: 'row', paddingVertical: 10, backgroundColor: '#F0F7F4', borderTopWidth: 2, borderTopColor: '#08765F' }}>
+                      <Text style={{ flex: 2, color: '#00372D', fontSize: 10, fontWeight: '800', paddingHorizontal: 6 }}>TOTAL</Text>
+                      <Text style={{ flex: 0.9, color: '#08754F', fontSize: 10, fontWeight: '800', textAlign: 'center' }}>268</Text>
+                      <Text style={{ flex: 0.9, color: '#08754F', fontSize: 10, fontWeight: '800', textAlign: 'center' }}>395</Text>
+                      <Text style={{ flex: 1, color: '#08754F', fontSize: 11, fontWeight: '800', textAlign: 'center' }}>663</Text>
+                      <Text style={{ flex: 0.7 }} />
+                      <Text style={{ flex: 1.3, color: '#647F9E', fontSize: 9, paddingHorizontal: 6 }}>Out of 800</Text>
+                    </View>
+                  </View>
+
+                  {/* Summary stats */}
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                    {[['Overall Average', `${selected.average.toFixed(1)}%`], ['Class Position', selected.position], ['Subjects Offered', String(selected.subjectsCount)]].map(([label, value]: any) => (
+                      <View key={label} style={{ flex: 1, padding: 10, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FAFCFD', alignItems: 'center' }}>
+                        <Text style={{ color: '#647F9E', fontSize: 9, fontWeight: '700' }}>{label.toUpperCase()}</Text>
+                        <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800', marginTop: 4 }}>{value}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Attendance */}
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={{ color: '#00372D', fontSize: 11, fontWeight: '800', marginBottom: 6 }}>Attendance</Text>
+                    <View style={{ flexDirection: 'row', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5 }}>
+                      {[['Days Open', '64'], ['Days Present', '60'], ['Days Absent', '4']].map(([label, value]: any, i: number) => (
+                        <View key={label} style={{ flex: 1, padding: 8, borderRightWidth: i < 2 ? 1 : 0, borderRightColor: '#DCE6EE', alignItems: 'center' }}>
+                          <Text style={{ color: '#647F9E', fontSize: 9 }}>{label}</Text>
+                          <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800', marginTop: 3 }}>{value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Affective & Psychomotor */}
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={{ color: '#00372D', fontSize: 11, fontWeight: '800', marginBottom: 6 }}>Affective & Psychomotor Assessment</Text>
+                    <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, overflow: 'hidden' }}>
+                      {[['Punctuality', '5'], ['Neatness', '5'], ['Attitude to Work', '4'], ['Relationship with Peers', '5'], ['Leadership', '4'], ['Sports/Games', '5']].map(([trait, rating]: any, i: number) => (
+                        <View key={trait} style={{ flexDirection: 'row', paddingVertical: 7, paddingHorizontal: 9, borderBottomWidth: i < 5 ? 1 : 0, borderBottomColor: '#E8EEF3', backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
+                          <Text style={{ flex: 1, color: '#244361', fontSize: 10 }}>{trait}</Text>
+                          <Text style={{ color: '#08754F', fontSize: 10, fontWeight: '800' }}>{rating} / 5</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Teacher's comment */}
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={{ color: '#00372D', fontSize: 11, fontWeight: '800', marginBottom: 5 }}>Class Teacher's Comment</Text>
+                    <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, padding: 10, backgroundColor: '#FAFCFD' }}>
+                      <Text style={{ color: '#244361', fontSize: 10, lineHeight: 15, fontStyle: 'italic' }}>"A diligent and respectful student. {selected.studentName.split(' ')[0]} has shown consistent improvement this term and participates actively in class discussions. Keep up the excellent work."</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 9, marginTop: 6 }}>— Mrs. O. Bello (Form Teacher, {selected.classArm})</Text>
+                    </View>
+                  </View>
+
+                  {/* Principal's comment */}
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={{ color: '#00372D', fontSize: 11, fontWeight: '800', marginBottom: 5 }}>Principal's Comment</Text>
+                    <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, padding: 10, backgroundColor: '#FAFCFD' }}>
+                      <Text style={{ color: '#244361', fontSize: 10, lineHeight: 15, fontStyle: 'italic' }}>"An impressive performance this term. We look forward to continued excellence in the coming session. A role model for peers."</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 9, marginTop: 6 }}>— Mr. A. Adeyemi (Principal)</Text>
+                    </View>
+                  </View>
+
+                  {/* Status footer */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                      <View style={{ backgroundColor: REPORT_STATUS_COLORS[selected.status]?.[0], borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: REPORT_STATUS_COLORS[selected.status]?.[1], fontSize: 9, fontWeight: '700' }}>{selected.status}</Text></View>
+                      <Text style={{ color: '#647F9E', fontSize: 9 }}>Generated {selected.generatedDate}</Text>
+                    </View>
+                    {selected.status !== 'Published' && (
+                      <Pressable onPress={() => publishCard(selected.id)} style={{ backgroundColor: '#00513D', borderRadius: 5, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6 }}>
+                        <CheckCircle2 size={12} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '700' }}>Publish</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Bulk Generate Modal */}
+      <Modal visible={bulkModal} transparent animationType="fade" onRequestClose={() => setBulkModal(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setBulkModal(false)}>
+          <View style={{ width: '100%', maxWidth: 460, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+              <View><Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>Bulk Generate Report Cards</Text><Text style={{ color: '#647F9E', fontSize: 11, marginTop: 3 }}>Generate report cards for all students in a class.</Text></View>
+              <Pressable onPress={() => setBulkModal(false)}><X size={19} color="#41698F" /></Pressable>
+            </View>
+            <View style={{ marginBottom: 13 }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Class Arm</Text>
+              <Pressable onPress={() => { const opts = classes.slice(1); setBulkForm(f => ({ ...f, classArm: opts[(opts.indexOf(f.classArm) + 1) % opts.length] })); }} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                <Text style={{ color: '#142F4D', fontSize: 12 }}>{bulkForm.classArm}</Text><ChevronDown size={14} color="#647F9E" />
+              </Pressable>
+            </View>
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Term</Text>
+              <Pressable onPress={() => { const opts = ['First Term', 'Second Term', 'Third Term']; setBulkForm(f => ({ ...f, term: opts[(opts.indexOf(f.term) + 1) % opts.length] })); }} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                <Text style={{ color: '#142F4D', fontSize: 12 }}>{bulkForm.term}</Text><ChevronDown size={14} color="#647F9E" />
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 10, borderWidth: 1, borderColor: '#FFE1B5', backgroundColor: '#FFF7E6', borderRadius: 6, marginBottom: 14 }}>
+              <AlertCircle size={15} color="#D58A13" />
+              <Text style={{ color: '#6B5A3F', fontSize: 10, flex: 1, lineHeight: 14 }}>Bulk generation will create report cards for all students with verified scores in {bulkForm.classArm} for {bulkForm.term}. This is a demo only — no real PDFs will be generated.</Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+              <Pressable onPress={() => setBulkModal(false)} style={{ minHeight: 35, paddingHorizontal: 16, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={generateBulk} style={{ minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 7 }}><FileText size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Generate</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -2998,7 +3400,7 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, Users & Permissions, Upload Results, and Review & Compile */}
+          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, Users & Permissions, Upload Results, Review & Compile, and Report Cards */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
           ) : active === 'Subjects & Classes' ? (
@@ -3013,6 +3415,8 @@ export default function App() {
             <UploadResultsScreen search={search} show={show} />
           ) : active === 'Review & Compile' ? (
             <ReviewCompileScreen search={search} show={show} />
+          ) : active === 'Report Cards' ? (
+            <ReportCardsScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
