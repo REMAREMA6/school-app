@@ -10,6 +10,7 @@ import {
   UserCircle, LogOut, Sliders, Plus, MoreVertical, MapPin, School as SchoolIcon,
   UserRound, ChevronUp, Check, Trash2, Layers, BookMarked, Save, FlaskConical,
   Languages, Calculator, Globe2, Code2, Leaf, Scale, TrendingUp, Microscope,
+  ChevronLeft, ChevronRight, Printer, ShieldCheck, Clock3, User as UserIcon,
 } from 'lucide-react-native';
 
 const C = {
@@ -635,6 +636,339 @@ function SubjectsAndClassesScreen({ search, show }: { search: string; show: (msg
   );
 }
 
+// === STUDENTS DATA ===
+const INITIAL_STUDENTS = [
+  { id: '1', initials: 'HA', name: 'Hajara Abubakar', admission: 'AK/2024/0012', gender: 'Female', classArm: 'JSS1A', guardian: 'Fatima Abubakar', status: 'Active', tone: 'green', dob: '14 Mar 2012', age: '13 years', phone: '+234 803 456 7890', session: '2024/2025', admissionYear: '2024', teacher: 'Mrs. O. Bello', scores: [['Mathematics', '78 / 100'], ['English Language', '84 / 100'], ['Basic Science', '81 / 100']] as [string, string][], activity: [['Student record updated', '2 days ago'], ['Scores verified', '5 days ago']] as [string, string][] },
+  { id: '2', initials: 'CO', name: 'Chukwuemeka Okafor', admission: 'AK/2023/0084', gender: 'Male', classArm: 'SS2B', guardian: 'Emmanuel Okafor', status: 'Active', tone: 'blue', dob: '08 Nov 2008', age: '16 years', phone: '+234 803 123 4567', session: '2024/2025', admissionYear: '2023', teacher: 'Mr. T. Okafor', scores: [['Mathematics', '82 / 100'], ['English Language', '76 / 100'], ['Physics', '79 / 100']] as [string, string][], activity: [['Scores verified', '1 day ago'], ['Class placement updated', '1 week ago']] as [string, string][] },
+  { id: '3', initials: 'AI', name: 'Amina Ibrahim', admission: 'AK/2024/0031', gender: 'Female', classArm: 'JSS2A', guardian: 'Musa Ibrahim', status: 'Active', tone: 'purple', dob: '21 Jun 2011', age: '14 years', phone: '+234 806 123 4567', session: '2024/2025', admissionYear: '2024', teacher: 'Mrs. L. Adebayo', scores: [['Mathematics', '88 / 100'], ['English Language', '80 / 100'], ['Basic Science', '85 / 100']] as [string, string][], activity: [['Student record updated', '3 days ago'], ['Scores verified', '1 week ago']] as [string, string][] },
+  { id: '4', initials: 'OA', name: 'Oluwaseun Adeyemi', admission: 'AK/2022/0068', gender: 'Male', classArm: 'SS3A', guardian: 'Kemi Adeyemi', status: 'Active', tone: 'blue', dob: '04 Feb 2007', age: '18 years', phone: '+234 805 222 1190', session: '2024/2025', admissionYear: '2022', teacher: 'Mr. A. Adeyemi', scores: [['Mathematics', '91 / 100'], ['English Language', '83 / 100'], ['Physics', '87 / 100']] as [string, string][], activity: [['Scores verified', '2 days ago'], ['Report card generated', '1 week ago']] as [string, string][] },
+  { id: '5', initials: 'IN', name: 'Ifeoma Nwosu', admission: 'AK/2023/0045', gender: 'Female', classArm: 'SS1B', guardian: 'Chukwuma Nwosu', status: 'Inactive', tone: 'purple', dob: '17 Sep 2009', age: '15 years', phone: '+234 809 321 4567', session: '2024/2025', admissionYear: '2023', teacher: 'Mrs. E. Hassan', scores: [['Mathematics', '65 / 100'], ['English Language', '72 / 100'], ['Biology', '69 / 100']] as [string, string][], activity: [['Status changed to inactive', '2 weeks ago'], ['Scores verified', '3 weeks ago']] as [string, string][] },
+  { id: '6', initials: 'AB', name: 'Abdulrahman Bello', admission: 'AK/2024/0076', gender: 'Male', classArm: 'JSS2B', guardian: 'Aisha Bello', status: 'Active', tone: 'green', dob: '29 Jan 2011', age: '14 years', phone: '+234 802 555 0192', session: '2024/2025', admissionYear: '2024', teacher: 'Mrs. O. Bello', scores: [['Mathematics', '74 / 100'], ['English Language', '77 / 100'], ['Basic Science', '80 / 100']] as [string, string][], activity: [['Student record updated', '4 days ago'], ['Scores verified', '6 days ago']] as [string, string][] },
+  { id: '7', initials: 'ZY', name: 'Zainab Yusuf', admission: 'AK/2023/0029', gender: 'Female', classArm: 'SS3B', guardian: 'Bashir Yusuf', status: 'Active', tone: 'purple', dob: '11 Dec 2007', age: '17 years', phone: '+234 807 444 8890', session: '2024/2025', admissionYear: '2023', teacher: 'Mr. C. Ibrahim', scores: [['Mathematics', '86 / 100'], ['English Language', '90 / 100'], ['Chemistry', '82 / 100']] as [string, string][], activity: [['Scores verified', '2 days ago'], ['Report card generated', '4 days ago']] as [string, string][] },
+  { id: '8', initials: 'TB', name: 'Tunde Balogun', admission: 'AK/2024/0057', gender: 'Male', classArm: 'JSS1B', guardian: 'Funmilayo Balogun', status: 'Inactive', tone: 'blue', dob: '03 Apr 2012', age: '13 years', phone: '+234 814 777 0112', session: '2024/2025', admissionYear: '2024', teacher: 'Mr. D. Musa', scores: [['Mathematics', '71 / 100'], ['English Language', '68 / 100'], ['Basic Science', '73 / 100']] as [string, string][], activity: [['Status changed to inactive', '1 month ago'], ['Student record updated', '1 month ago']] as [string, string][] },
+];
+
+const STU_TONES: Record<string, [string, string]> = {
+  green: ['#D7F3E5', '#075B46'], blue: ['#DCE9FF', '#2467D1'],
+  purple: ['#EBDDFF', '#6E35D4'], orange: ['#FFF0D4', '#B8790B'],
+};
+
+// === STUDENTS SCREEN ===
+function StudentsScreen({ search: globalSearch, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 1180;
+  const [students, setStudents] = useState(INITIAL_STUDENTS);
+  const [selectedId, setSelectedId] = useState<string | null>('1');
+  const [search, setSearch] = useState('');
+  const [classFilter, setClassFilter] = useState('All Classes');
+  const [statusFilter, setStatusFilter] = useState('All Statuses');
+  const [page, setPage] = useState(1);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [form, setForm] = useState<any>({});
+
+  const selectedStudent = students.find(s => s.id === selectedId) || null;
+  const effectiveSearch = (search || globalSearch).trim().toLowerCase();
+  const classes = ['All Classes', 'JSS1A', 'JSS1B', 'JSS2A', 'JSS2B', 'SS1B', 'SS2B', 'SS3A', 'SS3B'];
+  const statuses = ['All Statuses', 'Active', 'Inactive'];
+
+  const filtered = useMemo(() => students.filter(s => {
+    const matchesSearch = !effectiveSearch || [s.name, s.admission, s.classArm, s.guardian].some(v => v.toLowerCase().includes(effectiveSearch));
+    const matchesClass = classFilter === 'All Classes' || s.classArm === classFilter;
+    const matchesStatus = statusFilter === 'All Statuses' || s.status === statusFilter;
+    return matchesSearch && matchesClass && matchesStatus;
+  }), [students, effectiveSearch, classFilter, statusFilter]);
+
+  const pageSize = 8;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const visible = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  function chooseFilter(setter: (v: string) => void, value: string) { setter(value); setPage(1); }
+
+  function openAdd() { setEditingStudent(null); setForm({ name: '', admission: '', gender: 'Female', classArm: 'JSS1A', guardian: '', status: 'Active', tone: 'green', dob: '', age: '', phone: '', session: '2024/2025', admissionYear: '2025', teacher: '', scores: [], activity: [] }); setModalVisible(true); }
+  function openEdit() { if (!selectedStudent) return; setEditingStudent(selectedStudent); setForm({ ...selectedStudent }); setModalVisible(true); }
+  function saveStudent() {
+    if (!form.name?.trim() || !form.admission?.trim()) { show('Name and admission number are required', 'error'); return; }
+    const initials = form.name.trim().split(/\s+/).slice(0, 2).map((p: string) => p[0]).join('').toUpperCase();
+    const student = { ...form, id: form.id || String(Date.now()), initials, tone: form.tone || 'green' };
+    setStudents(curr => curr.some(s => s.id === student.id) ? curr.map(s => s.id === student.id ? student : s) : [student, ...curr]);
+    setSelectedId(student.id);
+    setModalVisible(false);
+    show(`${student.name} saved`, 'success');
+  }
+
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', minHeight: 0 }}>
+      <ScrollView style={{ flex: 1, minWidth: 0 }} contentContainerStyle={{ padding: 24, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+        {/* Page header */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginBottom: 18, flexWrap: 'wrap' }}>
+          <View style={{ flex: 1, minWidth: 280 }}>
+            <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Students</Text>
+            <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Manage student records, class placement, and academic profiles.</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 12, paddingVertical: 11, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, backgroundColor: '#FFFFFF' }}>
+            <CalendarDays size={20} color="#41698F" />
+            <View><Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>Tuesday, 26 August 2025</Text><Text style={{ color: '#647F9E', fontSize: 9, marginTop: 5 }}>Academic Session: 2024/2025  |  Term: Second Term</Text></View>
+          </View>
+        </View>
+
+        {/* Stats row */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+          {[['Total Students', '140', '2 new this term', 'green', Users], ['Active Students', '136', '2 new this term', 'blue', UserRound], ['Class Arms', '18', '1 new this term', 'purple', Users]].map(([label, value, change, tone, Ic]: any) => {
+            const [bg, fg] = STU_TONES[tone] || STU_TONES.green;
+            return (
+              <View key={label} style={{ flex: 1, minWidth: 200, minHeight: 110, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 17, flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}><Ic size={24} color={fg} /></View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{label}</Text>
+                  <Text style={{ color: '#142F4D', fontSize: 24, fontWeight: '800', marginTop: 4 }}>{value}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}><ArrowUpRight size={13} color="#08754F" /><Text style={{ color: '#08754F', fontSize: 10, fontWeight: '600' }}>{change}</Text></View>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Directory card */}
+        <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7, padding: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>Students Directory</Text>
+            <Pressable onPress={openAdd} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, minHeight: 34, paddingHorizontal: 14, borderRadius: 6, backgroundColor: '#00513D' }}>
+              <Plus size={15} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Add Student</Text>
+            </Pressable>
+          </View>
+
+          {/* Filters */}
+          <View style={{ flexDirection: 'row', gap: 9, marginBottom: 10, flexWrap: 'wrap' }}>
+            <View style={{ flex: 1, minWidth: 200, height: 36, flexDirection: 'row', alignItems: 'center', gap: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, backgroundColor: '#FFFFFF' }}>
+              <Search size={16} color="#8299B1" />
+              <TextInput value={search} onChangeText={v => { setSearch(v); setPage(1); }} placeholder="Search by name or admission number..." placeholderTextColor="#8097B0" style={{ flex: 1, fontSize: 11, color: '#142F4D', padding: 0 }} />
+            </View>
+            <Pressable style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{classFilter}</Text><ChevronDown size={15} color="#41698F" />
+            </Pressable>
+            <Pressable style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{statusFilter}</Text><ChevronDown size={15} color="#41698F" />
+            </Pressable>
+          </View>
+
+          {/* Filter chips */}
+          <View style={{ flexDirection: 'row', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}>
+            {classes.map(item => (
+              <Pressable key={item} onPress={() => chooseFilter(setClassFilter, item)} style={{ paddingHorizontal: 9, paddingVertical: 5, borderRadius: 5, borderWidth: 1, borderColor: classFilter === item ? '#B8E3D0' : '#DCE6EE', backgroundColor: classFilter === item ? '#E2F4EC' : 'transparent' }}>
+                <Text style={{ fontSize: 10, fontWeight: classFilter === item ? '700' : '500', color: classFilter === item ? '#075B46' : '#41698F' }}>{item}</Text>
+              </Pressable>
+            ))}
+            <View style={{ width: 1, backgroundColor: '#DCE6EE', marginHorizontal: 4 }} />
+            {statuses.map(item => (
+              <Pressable key={item} onPress={() => chooseFilter(setStatusFilter, item)} style={{ paddingHorizontal: 9, paddingVertical: 5, borderRadius: 5, borderWidth: 1, borderColor: statusFilter === item ? '#B8E3D0' : '#DCE6EE', backgroundColor: statusFilter === item ? '#E2F4EC' : 'transparent' }}>
+                <Text style={{ fontSize: 10, fontWeight: statusFilter === item ? '700' : '500', color: statusFilter === item ? '#075B46' : '#41698F' }}>{item}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Table */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ minWidth: 724 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 38, paddingHorizontal: 10, backgroundColor: '#F0F3F6', borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
+                {['Student Name', 'Admission No.', 'Gender', 'Class & Arm', 'Guardian', 'Status', 'Actions'].map((label, i) => (
+                  <Text key={label} style={{ width: [178, 120, 82, 92, 132, 82, 38][i], fontSize: 10, fontWeight: '800', color: '#244361', paddingRight: 5 }}>{label}</Text>
+                ))}
+              </View>
+              {visible.map(s => {
+                const [bg, fg] = STU_TONES[s.tone] || STU_TONES.green;
+                return (
+                  <Pressable key={s.id} onPress={() => setSelectedId(s.id)} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 49, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#E8EEF3', backgroundColor: selectedId === s.id ? '#E4F6ED' : 'transparent', borderWidth: selectedId === s.id ? 1 : 0, borderColor: selectedId === s.id ? '#9DD9BF' : 'transparent', borderRadius: selectedId === s.id ? 5 : 0 }}>
+                    <View style={{ width: 178, flexDirection: 'row', alignItems: 'center', gap: 10, paddingRight: 8 }}>
+                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Text style={{ color: fg, fontSize: 12, fontWeight: '800' }}>{s.initials}</Text></View>
+                      <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 11, fontWeight: '700', flexShrink: 1 }}>{s.name}</Text>
+                    </View>
+                    <Text numberOfLines={1} style={{ width: 120, fontSize: 10, color: '#244361', paddingRight: 5 }}>{s.admission}</Text>
+                    <Text style={{ width: 82, fontSize: 10, color: '#244361', paddingRight: 5 }}>{s.gender}</Text>
+                    <Text style={{ width: 92, fontSize: 10, color: '#244361', paddingRight: 5 }}>{s.classArm}</Text>
+                    <Text numberOfLines={1} style={{ width: 132, fontSize: 10, color: '#244361', paddingRight: 5 }}>{s.guardian}</Text>
+                    <View style={{ width: 82 }}><View style={{ backgroundColor: s.status === 'Active' ? '#D7F3E5' : '#E9EEF4', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' }}><Text style={{ color: s.status === 'Active' ? '#075B46' : '#64748B', fontSize: 9, fontWeight: '700' }}>{s.status}</Text></View></View>
+                    <View style={{ width: 38, alignItems: 'center' }}><MoreVertical size={17} color="#41698F" /></View>
+                  </Pressable>
+                );
+              })}
+              {!visible.length && <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#647F9E', fontSize: 12 }}>No students match your filters.</Text></View>}
+            </View>
+          </ScrollView>
+
+          {/* Pagination */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 12 }}>
+            <Text style={{ color: '#647F9E', fontSize: 10 }}>Showing {filtered.length ? (safePage - 1) * pageSize + 1 : 0}–{Math.min(safePage * pageSize, filtered.length)} of {filtered.length} students</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Pressable onPress={() => setPage(Math.max(1, safePage - 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronLeft size={16} color="#41698F" /></Pressable>
+              {Array.from({ length: pageCount }, (_, i) => i + 1).slice(0, 3).map(number => (
+                <Pressable key={number} onPress={() => setPage(number)} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: safePage === number ? '#006044' : '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: safePage === number ? '#006044' : '#FFFFFF' }}>
+                  <Text style={{ color: safePage === number ? '#FFFFFF' : '#41698F', fontSize: 11, fontWeight: safePage === number ? '800' : '500' }}>{number}</Text>
+                </Pressable>
+              ))}
+              <Pressable onPress={() => setPage(Math.min(pageCount, safePage + 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronRight size={16} color="#41698F" /></Pressable>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Right profile panel */}
+      {!compact && (
+        <View style={{ width: 378, borderLeftWidth: 2, borderLeftColor: '#D5E0E8', backgroundColor: '#F8FAFC', padding: 16 }}>
+          <ScrollView style={{ flex: 1, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 7 }} contentContainerStyle={{ paddingBottom: 14 }} showsVerticalScrollIndicator={false}>
+            {!selectedStudent ? (
+              <View style={{ alignItems: 'center', justifyContent: 'center', padding: 30, gap: 10 }}>
+                <UserRound size={34} color="#9BAEC0" />
+                <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '700' }}>Select a student</Text>
+                <Text style={{ color: '#647F9E', fontSize: 11, textAlign: 'center' }}>Choose a student from the directory to view their profile.</Text>
+              </View>
+            ) : (
+              <>
+                {/* Date header */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+                  <CalendarDays size={19} color="#41698F" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700' }}>Tuesday, 26 August 2025</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 9, marginTop: 5 }}>Academic Session: {selectedStudent.session}  |  Term: Second Term</Text>
+                  </View>
+                  <Pressable onPress={() => setSelectedId(null)}><X size={19} color="#59728F" /></Pressable>
+                </View>
+
+                {/* Identity */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10 }}>
+                  <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: STU_TONES[selectedStudent.tone]?.[0] || '#D7F3E5', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: STU_TONES[selectedStudent.tone]?.[1] || '#075B46', fontSize: 20, fontWeight: '800' }}>{selectedStudent.initials}</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                      <Text numberOfLines={1} style={{ color: '#142F4D', fontSize: 14, fontWeight: '800', maxWidth: 175 }}>{selectedStudent.name}</Text>
+                      <View style={{ backgroundColor: selectedStudent.status === 'Active' ? '#D7F3E5' : '#E9EEF4', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 }}><Text style={{ color: selectedStudent.status === 'Active' ? '#075B46' : '#64748B', fontSize: 9, fontWeight: '700' }}>{selectedStudent.status}</Text></View>
+                    </View>
+                    <Text style={{ color: '#647F9E', fontSize: 11, marginTop: 5 }}>{selectedStudent.admission}</Text>
+                  </View>
+                </View>
+
+                {/* Action buttons */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingBottom: 12 }}>
+                  <Pressable onPress={openEdit} style={{ minHeight: 32, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#00513D', borderRadius: 5 }}>
+                    <Pencil size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '700' }}>Edit Student</Text>
+                  </Pressable>
+                  <Pressable onPress={() => show(`Report card view requested for ${selectedStudent.name}`, 'info')} style={{ minHeight: 32, paddingHorizontal: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                    <FileText size={15} color="#274968" /><Text style={{ color: '#274968', fontSize: 9, fontWeight: '600' }}>View Report Card</Text>
+                  </Pressable>
+                  <Pressable onPress={() => show(`Report card generation requested for ${selectedStudent.name}`, 'info')} style={{ minHeight: 32, paddingHorizontal: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                    <Printer size={15} color="#274968" /><Text style={{ color: '#274968', fontSize: 9, fontWeight: '600' }}>Generate</Text>
+                  </Pressable>
+                </View>
+
+                {/* Personal Information */}
+                {([
+                  [UserRound, 'Personal Information', [['Gender', selectedStudent.gender], ['Date of Birth', selectedStudent.dob], ['Age', selectedStudent.age]]],
+                  [UserIcon, 'Guardian Information', [['Guardian Name', selectedStudent.guardian], ['Phone Number', selectedStudent.phone]]],
+                  [GraduationCap, 'Academic Information', [['Academic Session', selectedStudent.session], ['First Admission', selectedStudent.admissionYear], ['Class Teacher', selectedStudent.teacher]]],
+                ] as any).map(([Ic, title, rows]: any) => (
+                  <View key={title} style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderTopWidth: 1, borderTopColor: '#E7EDF2' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 9 }}><Ic size={19} color="#244361" /><Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>{title}</Text></View>
+                    <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 5, paddingHorizontal: 10, paddingVertical: 7 }}>
+                      {rows.map(([label, value]: any) => (
+                        <View key={label} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 25, gap: 8 }}>
+                          <Text style={{ color: '#647F9E', fontSize: 10, flex: 1 }}>{label}</Text>
+                          <Text numberOfLines={1} style={{ color: '#244361', fontSize: 10, fontWeight: '600', flex: 1.1 }}>{value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+
+                {/* Verified Scores */}
+                <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderTopWidth: 1, borderTopColor: '#E7EDF2' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 9 }}><ShieldCheck size={19} color="#244361" /><Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Verified Scores</Text></View>
+                  <View style={{ borderWidth: 1, borderColor: '#E1E9F0', borderRadius: 5, paddingHorizontal: 10, paddingVertical: 7 }}>
+                    {selectedStudent.scores.map(([subject, score]: any) => (
+                      <View key={subject} style={{ minHeight: 27, flexDirection: 'row', alignItems: 'center', gap: 5, borderBottomWidth: 1, borderBottomColor: '#EEF2F5' }}>
+                        <Text numberOfLines={1} style={{ color: '#244361', fontSize: 10, flex: 1.5 }}>{subject}</Text>
+                        <Text style={{ color: '#244361', fontSize: 10, fontWeight: '700', flex: 0.8 }}>{score}</Text>
+                        <View style={{ backgroundColor: '#D7F3E5', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}><Text style={{ color: '#075B46', fontSize: 8, fontWeight: '700' }}>Verified</Text></View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Recent Activity */}
+                <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderTopWidth: 1, borderTopColor: '#E7EDF2' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 9 }}><Clock3 size={19} color="#244361" /><Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Recent Academic Activity</Text></View>
+                  {selectedStudent.activity.map(([title, time]: any, index: number) => (
+                    <View key={title} style={{ minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={{ width: 13, alignItems: 'center' }}>{index === 0 && <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#08765F' }} />}</View>
+                      <Text style={{ color: '#244361', fontSize: 10, flex: 1 }}>{title}</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 9, width: 70 }}>{time}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Add/Edit Student Modal */}
+      <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(6, 28, 40, 0.45)', justifyContent: 'center', alignItems: 'center', padding: 18 }} onPress={() => setModalVisible(false)}>
+          <View style={{ width: '100%', maxWidth: 600, maxHeight: '90%', backgroundColor: '#FFFFFF', borderRadius: 10, padding: 20 }} onPress={(e: any) => e.stopPropagation()}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+              <View><Text style={{ color: '#142F4D', fontSize: 18, fontWeight: '800' }}>{editingStudent ? 'Edit Student' : 'Add Student'}</Text><Text style={{ color: '#647F9E', fontSize: 12, marginTop: 5 }}>Enter the student's record details.</Text></View>
+              <Pressable onPress={() => setModalVisible(false)}><X size={20} color="#41698F" /></Pressable>
+            </View>
+            <ScrollView style={{ maxHeight: 520 }} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingTop: 16, paddingBottom: 12 }}>
+              {[['name', 'Student Name', 'e.g. Hajara Abubakar'], ['admission', 'Admission Number', 'e.g. AK/2025/0013'], ['guardian', 'Guardian Name', 'Enter guardian name'], ['phone', 'Guardian Phone', '+234...'], ['dob', 'Date of Birth', 'e.g. 14 Mar 2012'], ['teacher', 'Class Teacher', 'Enter class teacher']].map(([key, label, placeholder]: any) => (
+                <View key={key} style={{ width: '48%', flexGrow: 1, minWidth: 190, gap: 6 }}>
+                  <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700' }}>{label}</Text>
+                  <TextInput value={form[key] || ''} onChangeText={v => setForm((c: any) => ({ ...c, [key]: v }))} placeholder={placeholder} placeholderTextColor="#93A4B6" style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, color: '#142F4D', fontSize: 12 }} />
+                </View>
+              ))}
+              <View style={{ width: '100%', gap: 6 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700' }}>Gender</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {['Female', 'Male'].map(value => (
+                    <Pressable key={value} onPress={() => setForm((c: any) => ({ ...c, gender: value }))} style={{ paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderColor: form.gender === value ? '#0B765B' : '#DCE6EE', borderRadius: 5, backgroundColor: form.gender === value ? '#E2F4EC' : 'transparent' }}>
+                      <Text style={{ color: form.gender === value ? '#075B46' : '#41698F', fontSize: 10, fontWeight: form.gender === value ? '700' : '500' }}>{value}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+              <View style={{ width: '100%', gap: 6 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700' }}>Class & Arm</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {['JSS1A', 'JSS1B', 'JSS2A', 'JSS2B', 'SS1B', 'SS2B', 'SS3A', 'SS3B'].map(value => (
+                    <Pressable key={value} onPress={() => setForm((c: any) => ({ ...c, classArm: value }))} style={{ paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderColor: form.classArm === value ? '#0B765B' : '#DCE6EE', borderRadius: 5, backgroundColor: form.classArm === value ? '#E2F4EC' : 'transparent' }}>
+                      <Text style={{ color: form.classArm === value ? '#075B46' : '#41698F', fontSize: 10, fontWeight: form.classArm === value ? '700' : '500' }}>{value}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+              <View style={{ width: '100%', gap: 6 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700' }}>Status</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {['Active', 'Inactive'].map(value => (
+                    <Pressable key={value} onPress={() => setForm((c: any) => ({ ...c, status: value }))} style={{ paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderColor: form.status === value ? '#0B765B' : '#DCE6EE', borderRadius: 5, backgroundColor: form.status === value ? '#E2F4EC' : 'transparent' }}>
+                      <Text style={{ color: form.status === value ? '#075B46' : '#41698F', fontSize: 10, fontWeight: form.status === value ? '700' : '500' }}>{value}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
+              <Pressable onPress={() => setModalVisible(false)} style={{ minHeight: 35, paddingHorizontal: 16, justifyContent: 'center', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}><Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={saveStudent} style={{ minHeight: 35, paddingHorizontal: 16, justifyContent: 'center', backgroundColor: '#00513D', borderRadius: 6 }}><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Save Student</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -725,11 +1059,13 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard, School Configuration, and Subjects & Classes */}
+          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, and Students */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
           ) : active === 'Subjects & Classes' ? (
             <SubjectsAndClassesScreen search={search} show={show} />
+          ) : active === 'Students' ? (
+            <StudentsScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
