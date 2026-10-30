@@ -3310,6 +3310,316 @@ function ReportCardsScreen({ search: globalSearch, show }: { search: string; sho
   );
 }
 
+// === SETTINGS DATA ===
+const AUDIT_LOG = [
+  { id: '1', timestamp: 'Aug 26, 2025 10:12 AM', user: 'Tunde Balogun', action: 'Score Correction', record: 'JSS1A - Mathematics', details: 'Corrected score from 72 to 78 for Hajara Abubakar' },
+  { id: '2', timestamp: 'Aug 26, 2025 09:45 AM', user: 'Grace Okafor', action: 'Batch Confirmed', record: 'JSS1A_Maths_T2_2025', details: 'Batch confirmed for 42 records' },
+  { id: '3', timestamp: 'Aug 26, 2025 08:30 AM', user: 'Emmanuel Ibe', action: 'Student Updated', record: 'AK/2024/0012', details: 'Updated guardian contact information' },
+  { id: '4', timestamp: 'Aug 26, 2025 07:15 AM', user: 'Fatima Hashim', action: 'Report Card Published', record: 'AK/2024/0061', details: 'Published JSS3 report card for Ibrahim Musa' },
+  { id: '5', timestamp: 'Aug 25, 2025 04:22 PM', user: 'Adebayo Johnson', action: 'Batch Under Review', record: 'SS2B_Eng_T2_2025', details: 'Moved batch to review stage' },
+  { id: '6', timestamp: 'Aug 25, 2025 11:03 AM', user: 'Mrs. Grace Okafor', action: 'User Login', record: 'System', details: 'Administrator login from 196.0.0.45' },
+  { id: '7', timestamp: 'Aug 24, 2025 03:17 PM', user: 'Chukwuemeka Okafor', action: 'Subject Assignment', record: 'Mathematics - JSS1A', details: 'Assigned Mathematics to JSS1A' },
+  { id: '8', timestamp: 'Aug 24, 2025 10:56 AM', user: 'Ibrahim Kanu', action: 'Result Upload', record: 'JSS3A_Sci_T2_2025', details: 'Uploaded 36 records from Excel file' },
+];
+
+const AUDIT_ACTION_COLORS: Record<string, [string, string]> = {
+  'Score Correction': ['#E0ECFF', '#176DDA'],
+  'Batch Confirmed': ['#D9F4E6', '#08754F'],
+  'Student Updated': ['#EFE3FF', '#6E35D4'],
+  'Report Card Published': ['#DFF5E9', '#08765F'],
+  'Batch Under Review': ['#FFF0D4', '#C27A08'],
+  'User Login': ['#E2EAF0', '#4D6683'],
+  'Subject Assignment': ['#EFE3FF', '#6E35D4'],
+  'Result Upload': ['#E0ECFF', '#176DDA'],
+};
+
+const DEFAULT_GENERAL = {
+  schoolName: 'Akoka Federal Academy',
+  academicYear: '2024/2025',
+  gradingScale: 'A1 - F9 (9-point)',
+  language: 'English',
+  timeZone: 'Africa/Lagos (WAT)',
+  caMax: '40',
+};
+
+// === SETTINGS SCREEN ===
+function SettingsScreen({ show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const { width } = useWindowDimensions();
+  const veryCompact = width < 900;
+  const [tab, setTab] = useState<'General' | 'Notifications' | 'Security' | 'Audit Log'>('General');
+  const [general, setGeneral] = useState({ ...DEFAULT_GENERAL });
+  const [generalDraft, setGeneralDraft] = useState({ ...DEFAULT_GENERAL });
+  const [generalErrors, setGeneralErrors] = useState<Record<string, string>>({});
+  const [notifications, setNotifications] = useState({
+    newUploads: true,
+    batchUpdates: true,
+    reportCards: true,
+    systemAlerts: true,
+  });
+  const [security, setSecurity] = useState({
+    requireApproval: true,
+    allowBulk: true,
+    twoFactor: false,
+    sessionTimeout: '30 minutes',
+  });
+  const [resetConfirm, setResetConfirm] = useState(false);
+
+  const gradingScales = ['A1 - F9 (9-point)', 'A - E (5-point)', 'A - D (4-point)'];
+  const languages = ['English', 'Yoruba', 'Hausa', 'Igbo', 'French'];
+  const timeZones = ['Africa/Lagos (WAT)', 'Africa/Abuja (WAT)', 'UTC', 'Europe/London (GMT)'];
+  const timeouts = ['15 minutes', '30 minutes', '1 hour', '2 hours', '4 hours'];
+
+  function validateGeneral(g: typeof general): Record<string, string> {
+    const errs: Record<string, string> = {};
+    if (!g.schoolName?.trim()) errs.schoolName = 'School name is required';
+    if (!g.academicYear?.trim()) errs.academicYear = 'Academic year is required';
+    else if (!/^\d{4}\/\d{4}$/.test(g.academicYear)) errs.academicYear = 'Format: YYYY/YYYY';
+    const caNum = Number(g.caMax);
+    if (!g.caMax || isNaN(caNum)) errs.caMax = 'Numeric value required';
+    else if (caNum < 10 || caNum > 60) errs.caMax = 'Must be between 10 and 60';
+    return errs;
+  }
+  function saveGeneral() {
+    const errs = validateGeneral(generalDraft);
+    setGeneralErrors(errs);
+    if (Object.keys(errs).length) { show('Please fix the highlighted fields', 'error'); return; }
+    setGeneral({ ...generalDraft });
+    show('General settings saved (demo only)', 'success');
+  }
+  function resetGeneral() {
+    setGeneralDraft({ ...DEFAULT_GENERAL });
+    setGeneralErrors({});
+    setResetConfirm(false);
+    show('Settings reset to defaults', 'info');
+  }
+
+  function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle: () => void; disabled?: boolean }) {
+    return (
+      <Pressable onPress={disabled ? undefined : onToggle} style={{ opacity: disabled ? 0.5 : 1 }}>
+        <View style={{ width: 38, height: 22, borderRadius: 11, backgroundColor: on ? '#08765F' : '#CCD8E2', paddingHorizontal: 2, justifyContent: 'center', flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#FFFFFF', alignSelf: on ? 'flex-end' : 'flex-start', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }} />
+        </View>
+      </Pressable>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: 1600, alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
+      {/* Page header */}
+      <View style={{ marginBottom: 18 }}>
+        <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Settings</Text>
+        <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Customize application preferences and result compilation workflows.</Text>
+      </View>
+
+      {/* Tabs */}
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#DCE6EE', marginBottom: 18, gap: 4 }}>
+        {(['General', 'Notifications', 'Security', 'Audit Log'] as const).map(t => (
+          <Pressable key={t} onPress={() => setTab(t)} style={{ paddingHorizontal: 16, paddingVertical: 11, borderBottomWidth: 2, borderBottomColor: tab === t ? '#08765F' : 'transparent' }}>
+            <Text style={{ color: tab === t ? '#08765F' : '#647F9E', fontSize: 12, fontWeight: tab === t ? '800' : '600' }}>{t}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Layout: General (left) + Notifications/Security (right top) + Audit Log (right bottom) */}
+      <View style={{ flexDirection: veryCompact ? 'column' : 'row', gap: 14, alignItems: 'flex-start' }}>
+        {/* General Settings — left column, or first tab */}
+        {(!veryCompact || tab === 'General') && (
+          <View style={{ width: veryCompact ? '100%' : 380, flexShrink: 0 }}>
+            <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 16 }}>
+              <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>General Settings</Text>
+              <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 14 }}>Configure basic application settings and school information.</Text>
+
+              {/* School Name */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>School Name *</Text>
+                <TextInput value={generalDraft.schoolName} onChangeText={v => setGeneralDraft(d => ({ ...d, schoolName: v }))} style={{ height: 38, borderWidth: 1, borderColor: generalErrors.schoolName ? '#FFC6C8' : '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }} />
+                {generalErrors.schoolName && <Text style={{ color: '#D92E32', fontSize: 10, marginTop: 3 }}>{generalErrors.schoolName}</Text>}
+              </View>
+
+              {/* Academic Year */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>Academic Year Start *</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', height: 38, borderWidth: 1, borderColor: generalErrors.academicYear ? '#FFC6C8' : '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, backgroundColor: '#FFFFFF' }}>
+                  <CalendarDays size={15} color="#647F9E" />
+                  <TextInput value={generalDraft.academicYear} onChangeText={v => setGeneralDraft(d => ({ ...d, academicYear: v }))} placeholder="YYYY/YYYY" style={{ flex: 1, marginLeft: 8, fontSize: 12, color: '#142F4D', padding: 0 }} />
+                </View>
+                {generalErrors.academicYear ? <Text style={{ color: '#D92E32', fontSize: 10, marginTop: 3 }}>{generalErrors.academicYear}</Text> : <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>Format: YYYY/YYYY</Text>}
+              </View>
+
+              {/* Grading Scale */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>Grading Scale *</Text>
+                <Pressable onPress={() => setGeneralDraft(d => ({ ...d, gradingScale: gradingScales[(gradingScales.indexOf(d.gradingScale) + 1) % gradingScales.length] }))} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12 }}>{generalDraft.gradingScale}</Text><ChevronDown size={15} color="#647F9E" />
+                </Pressable>
+              </View>
+
+              {/* Language */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>Language *</Text>
+                <Pressable onPress={() => setGeneralDraft(d => ({ ...d, language: languages[(languages.indexOf(d.language) + 1) % languages.length] }))} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12 }}>{generalDraft.language}</Text><ChevronDown size={15} color="#647F9E" />
+                </Pressable>
+              </View>
+
+              {/* Time Zone */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>Time Zone *</Text>
+                <Pressable onPress={() => setGeneralDraft(d => ({ ...d, timeZone: timeZones[(timeZones.indexOf(d.timeZone) + 1) % timeZones.length] }))} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#142F4D', fontSize: 12 }} numberOfLines={1}>{generalDraft.timeZone}</Text><ChevronDown size={15} color="#647F9E" />
+                </Pressable>
+                <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>Current time: Aug 26, 2025 10:22 AM</Text>
+              </View>
+
+              {/* CA Max */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>Continuous Assessment Maximum *</Text>
+                <TextInput value={generalDraft.caMax} onChangeText={v => setGeneralDraft(d => ({ ...d, caMax: v }))} keyboardType="numeric" style={{ height: 38, borderWidth: 1, borderColor: generalErrors.caMax ? '#FFC6C8' : '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, fontSize: 12, color: '#142F4D', backgroundColor: '#FFFFFF' }} />
+                {generalErrors.caMax ? <Text style={{ color: '#D92E32', fontSize: 10, marginTop: 3 }}>{generalErrors.caMax}</Text> : <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>Must be between 10 and 60</Text>}
+              </View>
+
+              {/* Buttons */}
+              <View style={{ flexDirection: 'row', gap: 8, borderTopWidth: 1, borderTopColor: '#E2EAF0', paddingTop: 14 }}>
+                <Pressable onPress={() => setResetConfirm(true)} style={{ flex: 1, height: 36, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Reset to Default</Text>
+                </Pressable>
+                <Pressable onPress={saveGeneral} style={{ flex: 1, height: 36, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Save Changes</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Right column — Notifications + Security + Audit Log stacked */}
+        {(!veryCompact || tab !== 'General') && (
+          <View style={{ flex: 1, minWidth: 0, gap: 14 }}>
+            {/* Notifications + Security side-by-side */}
+            {(!veryCompact || tab === 'Notifications' || tab === 'Security') && (
+              <View style={{ flexDirection: veryCompact ? 'column' : 'row', gap: 14 }}>
+                {/* Notifications */}
+                {(!veryCompact || tab === 'Notifications') && (
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 16 }}>
+                      <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>Notifications</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 14 }}>Manage when and how you receive notifications.</Text>
+                      {[
+                        { key: 'newUploads', icon: CloudUpload, title: 'New Result Uploads', desc: 'Get notified when new result batches are uploaded.' },
+                        { key: 'batchUpdates', icon: ClipboardCheck, title: 'Batch Status Updates', desc: 'Receive updates on batch review and verification status.' },
+                        { key: 'reportCards', icon: FileText, title: 'Report Card Updates', desc: 'Get notified about report card approvals and publications.' },
+                        { key: 'systemAlerts', icon: AlertCircle, title: 'System Alerts', desc: 'Important system and security notifications.' },
+                      ].map(p => (
+                        <View key={p.key} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 11, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                          <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><p.icon size={18} color="#08704F" /></View>
+                          <View style={{ flex: 1, minWidth: 0 }}>
+                            <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '700' }}>{p.title}</Text>
+                            <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>{p.desc}</Text>
+                          </View>
+                          <Toggle on={(notifications as any)[p.key]} onToggle={() => setNotifications(n => ({ ...n, [p.key]: !(n as any)[p.key] }))} />
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Security */}
+                {(!veryCompact || tab === 'Security') && (
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 16 }}>
+                      <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>Security</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 14 }}>Configure security and workflow settings.</Text>
+                      {[
+                        { key: 'requireApproval', icon: ShieldCheck, title: 'Require Approval for Publishing', desc: 'Enable approval workflow before publishing report cards.' },
+                        { key: 'allowBulk', icon: Layers, title: 'Allow Bulk Operations', desc: 'Permit bulk actions for multiple records.' },
+                        { key: 'twoFactor', icon: Shield, title: 'Two-Factor Authentication', desc: 'Require 2FA for administrator accounts. (Preference only — backend setup required.)' },
+                      ].map(p => (
+                        <View key={p.key} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 11, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                          <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: '#E0ECFF', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><p.icon size={18} color="#176DDA" /></View>
+                          <View style={{ flex: 1, minWidth: 0 }}>
+                            <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '700' }}>{p.title}</Text>
+                            <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>{p.desc}</Text>
+                          </View>
+                          <Toggle on={(security as any)[p.key]} onToggle={() => setSecurity(s => ({ ...s, [p.key]: !(s as any)[p.key] }))} />
+                        </View>
+                      ))}
+                      <View style={{ marginTop: 14, marginBottom: 14 }}>
+                        <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 5 }}>Session Timeout</Text>
+                        <Pressable onPress={() => setSecurity(s => ({ ...s, sessionTimeout: timeouts[(timeouts.indexOf(s.sessionTimeout) + 1) % timeouts.length] }))} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                          <Text style={{ color: '#142F4D', fontSize: 12 }}>{security.sessionTimeout}</Text><ChevronDown size={15} color="#647F9E" />
+                        </Pressable>
+                      </View>
+                      <Pressable onPress={() => show('Security settings saved (demo only)', 'success')} style={{ height: 36, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Save Changes</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Audit Log */}
+            {(!veryCompact || tab === 'Audit Log') && (
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <View>
+                      <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Audit Log</Text>
+                      <Text style={{ color: '#647F9E', fontSize: 11, marginTop: 3 }}>Latest 50 activity events in the system.</Text>
+                    </View>
+                    <Pressable onPress={() => show('View Full Log requested (demo only — no full audit route exists)', 'info')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+                      <Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>View Full Log</Text>
+                      <ArrowUpRight size={13} color="#55799B" />
+                    </Pressable>
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={{ minWidth: 900 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 36, paddingHorizontal: 10, backgroundColor: '#F0F3F6', borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
+                        {['Timestamp', 'User', 'Action', 'Affected Record', 'Event Details'].map((h, i) => (
+                          <Text key={h} style={{ width: [150, 150, 160, 170, 280][i], fontSize: 10, fontWeight: '800', color: '#244361', paddingRight: 5 }}>{h}</Text>
+                        ))}
+                      </View>
+                      {AUDIT_LOG.map((row, idx) => {
+                        const [abg, afg] = AUDIT_ACTION_COLORS[row.action] || ['#E2EAF0', '#334F6E'];
+                        return (
+                          <View key={row.id} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 42, paddingHorizontal: 10, borderBottomWidth: idx < AUDIT_LOG.length - 1 ? 1 : 0, borderBottomColor: '#E8EEF3' }}>
+                            <Text style={{ width: 150, fontSize: 10, color: '#355779', paddingRight: 5 }}>{row.timestamp}</Text>
+                            <Text numberOfLines={1} style={{ width: 150, fontSize: 10, color: '#355779', fontWeight: '600', paddingRight: 5 }}>{row.user}</Text>
+                            <View style={{ width: 160 }}><View style={{ backgroundColor: abg, borderRadius: 11, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: afg, fontSize: 9, fontWeight: '700' }}>{row.action}</Text></View></View>
+                            <Text numberOfLines={1} style={{ width: 170, fontSize: 10, color: '#355779', paddingRight: 5 }}>{row.record}</Text>
+                            <Text numberOfLines={2} style={{ width: 280, fontSize: 10, color: '#355779', paddingRight: 5 }}>{row.details}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                  <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 10, fontStyle: 'italic' }}>Showing 8 of 8 sample events. Demo data — wire to audit API for real events.</Text>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* Reset Confirmation */}
+      <Modal visible={resetConfirm} transparent animationType="fade" onRequestClose={() => setResetConfirm(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setResetConfirm(false)}>
+          <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#FFF7E6', borderWidth: 1, borderColor: '#FFE1B5', alignItems: 'center', justifyContent: 'center' }}><AlertCircle size={18} color="#D58A13" /></View>
+              <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Reset to Defaults?</Text>
+            </View>
+            <Text style={{ color: '#647F9E', fontSize: 12, lineHeight: 18 }}>This will discard your current changes and restore the default values for all General Settings fields. This action cannot be undone.</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+              <Pressable onPress={() => setResetConfirm(false)} style={{ paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={resetGeneral} style={{ backgroundColor: '#D58A13', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}><RefreshCw size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Reset</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </ScrollView>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -3400,7 +3710,7 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, Users & Permissions, Upload Results, Review & Compile, and Report Cards */}
+          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, Users & Permissions, Upload Results, Review & Compile, Report Cards, and Settings */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
           ) : active === 'Subjects & Classes' ? (
@@ -3417,6 +3727,8 @@ export default function App() {
             <ReviewCompileScreen search={search} show={show} />
           ) : active === 'Report Cards' ? (
             <ReportCardsScreen search={search} show={show} />
+          ) : active === 'Settings' ? (
+            <SettingsScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
