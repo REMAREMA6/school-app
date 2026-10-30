@@ -3742,7 +3742,10 @@ export default function App() {
             {/* Stats */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 20 }}>
               {[['Total Students', '140', '↑ 2 new this term', 'green', Users, false], ['Teachers', '12', '— No change', 'blue', Users, true], ['Result Batches', '243', '↑ 18 new this term', 'purple', FileText, false], ['Published Report Cards', '82', '↑ 12% from last term', 'green', FileText, false]].map(([label, val, trend, tone, Ic, noChange]: any) => (
-                <Pressable key={label} onPress={() => show(`${label}: ${val}`, 'info')} style={{ flex: 1, minWidth: 200, minHeight: 120, backgroundColor: dark ? DK.card : '#FFFFFF', borderWidth: 1, borderColor: dark ? DK.border : '#E0E8EF', borderRadius: 8, paddingHorizontal: 18, paddingVertical: 18, flexDirection: 'row', alignItems: 'flex-start', gap: 14, shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } }}>
+                <Pressable key={label} onPress={() => {
+                  const target = label === 'Total Students' ? 'Students' : label === 'Teachers' ? 'Users & Permissions' : label === 'Result Batches' ? 'Upload Results' : label === 'Published Report Cards' ? 'Report Cards' : null;
+                  if (target) { setActive(target); show(`Opening ${target}...`, 'info'); } else { show(`${label}: ${val}`, 'info'); }
+                }} style={{ flex: 1, minWidth: 200, minHeight: 120, backgroundColor: dark ? DK.card : '#FFFFFF', borderWidth: 1, borderColor: dark ? DK.border : '#E0E8EF', borderRadius: 8, paddingHorizontal: 18, paddingVertical: 18, flexDirection: 'row', alignItems: 'flex-start', gap: 14, shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } }}>
                   <View style={{ width: 42, height: 42, borderRadius: 11, backgroundColor: TBG[tone as keyof typeof TBG], alignItems: 'center', justifyContent: 'center' }}><Ic size={22} color={TC[tone as keyof typeof TC]} strokeWidth={2.3} /></View>
                   <View style={{ flex: 1 }}><Text style={{ color: dark ? DK.muted : '#4D6683', fontSize: 11, fontWeight: '600' }}>{label}</Text><Text style={{ color: dark ? DK.ink : '#102C48', fontSize: 24, fontWeight: '800', marginTop: 6 }}>{val}</Text><Text style={{ color: noChange ? '#7188A2' : '#08784F', fontSize: 10, fontWeight: '600', marginTop: 6 }}>{trend}</Text></View>
                 </Pressable>
@@ -3757,7 +3760,11 @@ export default function App() {
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                     {WF.map((s, i) => (
                       <React.Fragment key={s.l}>
-                        <Pressable onPress={() => show(`${s.l}: ${s.c}`, 'info')} style={{ alignItems: 'center', width: 130 }}>
+                        <Pressable onPress={() => {
+                          const target = s.l === 'Uploaded' ? 'Upload Results' : s.l === 'Published' || s.l === 'Compiled' ? 'Report Cards' : 'Review & Compile';
+                          setActive(target);
+                          show(`Opening ${target}...`, 'info');
+                        }} style={{ alignItems: 'center', width: 130 }}>
                           <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: TBG[s.tone as keyof typeof TBG], alignItems: 'center', justifyContent: 'center' }}><s.Ic size={24} color={TC[s.tone as keyof typeof TC]} strokeWidth={2.4} /></View>
                           <Text style={{ color: dark ? DK.ink : '#17334F', fontSize: 12, fontWeight: '800', marginTop: 10 }}>{s.l}</Text>
                           <Text style={{ color: dark ? DK.muted : '#627A96', fontSize: 10, lineHeight: 15, textAlign: 'center', marginTop: 6 }}>{s.d}</Text>
@@ -3776,7 +3783,7 @@ export default function App() {
                 </View>
                 <Text style={{ color: '#D9383C', fontSize: 40, fontWeight: '800', marginTop: 12 }}>31</Text>
                 <Text style={{ color: '#637B96', fontSize: 12, lineHeight: 18 }}>batches have incomplete results across various classes and subjects.</Text>
-                <Pressable onPress={() => show('Opening review screen...', 'info')} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 9, marginTop: 14, alignSelf: 'flex-start' }}>
+                <Pressable onPress={() => { setActive('Review & Compile'); show('Opening Review & Compile...', 'info'); }} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 9, marginTop: 14, alignSelf: 'flex-start' }}>
                   <Eye size={16} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Review Results</Text>
                 </Pressable>
               </View>
@@ -3787,7 +3794,7 @@ export default function App() {
               <View style={{ flex: narrow ? 1 : 1.65, minWidth: 0, backgroundColor: dark ? DK.card : '#FFFFFF', borderWidth: 1, borderColor: dark ? DK.border : '#DFE7EE', borderRadius: 8, padding: 16, shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <Text style={{ color: dark ? DK.ink : '#142F4D', fontSize: 15, fontWeight: '800' }}>Recent Result Batches</Text>
-                  <Pressable onPress={() => show('View all batches', 'info')} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><Text style={{ color: '#3E5F80', fontSize: 11, fontWeight: '600' }}>View all</Text><ArrowUpRight size={13} color="#55799B" /></Pressable>
+                  <Pressable onPress={() => { setActive('Review & Compile'); show('Opening Review & Compile...', 'info'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><Text style={{ color: '#3E5F80', fontSize: 11, fontWeight: '600' }}>View all</Text><ArrowUpRight size={13} color="#55799B" /></Pressable>
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={{ minWidth: 700 }}>
@@ -3813,10 +3820,13 @@ export default function App() {
               <View style={{ flex: 1, minWidth: 0, backgroundColor: dark ? DK.card : '#FFFFFF', borderWidth: 1, borderColor: dark ? DK.border : '#DFE7EE', borderRadius: 8, padding: 16, shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <Text style={{ color: dark ? DK.ink : '#142F4D', fontSize: 15, fontWeight: '800' }}>Recent Activity</Text>
-                  <Pressable onPress={() => show('View all activity', 'info')} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><Text style={{ color: '#3E5F80', fontSize: 11, fontWeight: '600' }}>View all</Text><ArrowUpRight size={13} color="#55799B" /></Pressable>
+                  <Pressable onPress={() => { setActive('Settings'); show('Opening Settings → Audit Log...', 'info'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><Text style={{ color: '#3E5F80', fontSize: 11, fontWeight: '600' }}>View all</Text><ArrowUpRight size={13} color="#55799B" /></Pressable>
                 </View>
                 {ACTS.map((a, i) => (
-                  <Pressable key={i} onPress={() => show(`${a.t}: ${a.d}`, 'info')} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: dark ? DK.border : '#E9EFF4' }}>
+                  <Pressable key={i} onPress={() => {
+                    const target = a.t === 'Result uploaded' ? 'Upload Results' : a.t === 'Score corrected' || a.t === 'Result compiled' ? 'Review & Compile' : a.t === 'Report card published' ? 'Report Cards' : null;
+                    if (target) { setActive(target); show(`Opening ${target}...`, 'info'); } else { show(`${a.t}: ${a.d}`, 'info'); }
+                  }} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: dark ? DK.border : '#E9EFF4' }}>
                     <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: TBG[a.tone as keyof typeof TBG], alignItems: 'center', justifyContent: 'center' }}><a.Ic size={18} color={TC[a.tone as keyof typeof TC]} strokeWidth={2.3} /></View>
                     <View style={{ flex: 1, minWidth: 0 }}><Text style={{ color: dark ? DK.ink : '#213B57', fontSize: 11, fontWeight: '800' }}>{a.t}</Text><Text numberOfLines={1} style={{ color: dark ? DK.muted : '#7187A0', fontSize: 10, marginTop: 3 }}>{a.d}</Text></View>
                     <Text style={{ color: dark ? DK.muted : '#6C83A0', fontSize: 10 }}>{a.time}</Text>
@@ -3851,7 +3861,7 @@ export default function App() {
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, paddingHorizontal: 20, paddingVertical: 13, borderTopWidth: 1, borderTopColor: '#E2EAF0' }}>
                 <Pressable onPress={() => setSelBatch(null)} style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: 7, borderWidth: 1, borderColor: '#DCE6EE' }}><Text style={{ fontSize: 12, fontWeight: '600', color: '#213B57' }}>Close</Text></Pressable>
-                <Pressable onPress={() => { setSelBatch(null); show('Opening batch details...', 'info'); }} style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: 7, backgroundColor: '#00513D' }}><Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>View Details</Text></Pressable>
+                <Pressable onPress={() => { setSelBatch(null); setActive('Review & Compile'); show('Opening Review & Compile...', 'info'); }} style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: 7, backgroundColor: '#00513D' }}><Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>View Details</Text></Pressable>
               </View>
             </View>
           </Pressable>
