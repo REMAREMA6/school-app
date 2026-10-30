@@ -8,7 +8,8 @@ import {
   AlertCircle, Clipboard, CheckCircle2, ArrowRight, Eye,
   Pencil, FileCheck, GraduationCap, Menu, X, ArrowUpRight,
   UserCircle, LogOut, Sliders, Plus, MoreVertical, MapPin, School as SchoolIcon,
-  UserRound, ChevronUp, Check,
+  UserRound, ChevronUp, Check, Trash2, Layers, BookMarked, Save, FlaskConical,
+  Languages, Calculator, Globe2, Code2, Leaf, Scale, TrendingUp, Microscope,
 } from 'lucide-react-native';
 
 const C = {
@@ -261,6 +262,379 @@ function SchoolConfigScreen({ search, show }: { search: string; show: (msg: stri
   );
 }
 
+// === SUBJECTS & CLASSES DATA ===
+const INITIAL_CLASSES = [
+  { id: 'jss1', name: 'JSS1', arms: [{ code: 'JSS1A', students: 14 }, { code: 'JSS1B', students: 15 }, { code: 'JSS1C', students: 13 }], total: 42, expanded: true },
+  { id: 'jss2', name: 'JSS2', arms: [{ code: 'JSS2A', students: 19 }, { code: 'JSS2B', students: 19 }], total: 38, expanded: false },
+  { id: 'jss3', name: 'JSS3', arms: [{ code: 'JSS3A', students: 18 }, { code: 'JSS3B', students: 18 }], total: 36, expanded: false },
+  { id: 'ss1', name: 'SS1', arms: [{ code: 'SS1A', students: 14 }, { code: 'SS1B', students: 13 }, { code: 'SS1C', students: 13 }], total: 40, expanded: false },
+  { id: 'ss2', name: 'SS2', arms: [{ code: 'SS2A', students: 19 }, { code: 'SS2B', students: 18 }], total: 37, expanded: false },
+  { id: 'ss3', name: 'SS3', arms: [{ code: 'SS3A', students: 18 }, { code: 'SS3B', students: 17 }], total: 35, expanded: false },
+];
+
+const INITIAL_SUBJECTS = [
+  { code: 'MAT', name: 'Mathematics', category: 'Science', grades: 'JSS1 – SS3', type: 'Core', description: 'Study of numbers, quantities, structure, space, and change. Foundation for analytical thinking and problem-solving.', Ic: Calculator },
+  { code: 'ENG', name: 'English Language', category: 'Languages', grades: 'JSS1 – SS3', type: 'Core', description: 'Development of reading, writing, speaking, and listening skills in English. Foundation for all communication.', Ic: Languages },
+  { code: 'BIO', name: 'Biology', category: 'Science', grades: 'JSS1 – SS3', type: 'Core', description: 'Study of living organisms and their structure, function, growth, origin, evolution, and distribution.', Ic: Microscope },
+  { code: 'CHE', name: 'Chemistry', category: 'Science', grades: 'JSS1 – SS3', type: 'Core', description: 'Study of matter, its properties, composition, structure, and the changes it undergoes during chemical reactions.', Ic: FlaskConical },
+  { code: 'PHY', name: 'Physics', category: 'Science', grades: 'JSS1 – SS3', type: 'Core', description: 'Study of matter, energy, motion, and force, and their interactions across the universe.', Ic: TrendingUp },
+  { code: 'CCT', name: 'Civic Education', category: 'Social Science', grades: 'JSS1 – SS3', type: 'Core', description: 'Study of rights, responsibilities, and duties of citizens, governance, and civic engagement.', Ic: Scale },
+  { code: 'ICT', name: 'Information & Communication Technology', category: 'Technology', grades: 'JSS1 – SS3', type: 'Core', description: 'Study of computer systems, networks, and digital communication tools used in modern society.', Ic: Code2 },
+  { code: 'SST', name: 'Social Studies', category: 'Social Science', grades: 'JSS1 – JSS3', type: 'Core', description: 'Integrated study of social sciences and humanities to promote civic competence and social understanding.', Ic: Globe2 },
+  { code: 'AGR', name: 'Agricultural Science', category: 'Science', grades: 'JSS1 – SS3', type: 'Elective', description: 'Study of farming, crop cultivation, livestock rearing, and agricultural technology for food production.', Ic: Leaf },
+  { code: 'GEO', name: 'Geography', category: 'Social Science', grades: 'JSS1 – SS3', type: 'Elective', description: 'Study of Earth\'s lands, features, inhabitants, and phenomena, and the interactions between them.', Ic: Globe2 },
+  { code: 'ECO', name: 'Economics', category: 'Social Science', grades: 'SS1 – SS3', type: 'Elective', description: 'Study of production, distribution, and consumption of goods and services, and economic decision-making.', Ic: TrendingUp },
+  { code: 'GOV', name: 'Government', category: 'Social Science', grades: 'SS1 – SS3', type: 'Elective', description: 'Study of political institutions, processes, theories, and the structure of government.', Ic: Scale },
+];
+
+const SUBJECT_CATEGORY_COLORS: Record<string, [string, string]> = {
+  'Science': ['#DFF5E9', '#08754F'],
+  'Languages': ['#E0ECFF', '#236FD0'],
+  'Social Science': ['#FFF0D4', '#C27A08'],
+  'Technology': ['#EFE4FF', '#7443C8'],
+  'Arts': ['#FFE1E1', '#D92E32'],
+};
+
+// === SUBJECTS & CLASSES SCREEN ===
+function SubjectsAndClassesScreen({ search, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const [classes, setClasses] = useState(INITIAL_CLASSES);
+  const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
+  const [selectedCode, setSelectedCode] = useState<string>('BIO');
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [addModal, setAddModal] = useState<{ visible: boolean; mode: 'class' | 'subject' }>({ visible: false, mode: 'subject' });
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const selected = subjects.find(s => s.code === selectedCode) || subjects[0];
+
+  // Initialize edit values whenever the selected subject changes
+  React.useEffect(() => {
+    if (selected) {
+      setEditValues({
+        code: selected.code,
+        name: selected.name,
+        category: selected.category,
+        grades: selected.grades,
+        type: selected.type,
+        description: selected.description,
+      });
+    }
+  }, [selectedCode]);
+
+  const filteredSubjects = useMemo(() => {
+    if (!search.trim()) return subjects;
+    const q = search.toLowerCase();
+    return subjects.filter(s => `${s.code} ${s.name} ${s.category} ${s.grades} ${s.type}`.toLowerCase().includes(q));
+  }, [subjects, search]);
+
+  const filteredClasses = useMemo(() => {
+    if (!search.trim()) return classes;
+    const q = search.toLowerCase();
+    return classes.filter(c => `${c.name} ${c.arms.map(a => a.code).join(' ')}`.toLowerCase().includes(q));
+  }, [classes, search]);
+
+  function toggleClass(id: string) {
+    setClasses(curr => curr.map(c => c.id === id ? { ...c, expanded: !c.expanded } : c));
+  }
+
+  function saveSubject() {
+    if (!editValues.name || !editValues.code) { show('Subject code and name are required', 'error'); return; }
+    setSubjects(curr => curr.map(s => s.code === selectedCode ? { ...s, name: editValues.name, category: editValues.category || s.category, grades: editValues.grades || s.grades, type: editValues.type || s.type, description: editValues.description || s.description } : s));
+    show(`${editValues.name} updated`, 'success');
+  }
+
+  function deleteSubject() {
+    if (!confirmDelete) return;
+    const subj = subjects.find(s => s.code === confirmDelete);
+    setSubjects(curr => curr.filter(s => s.code !== confirmDelete));
+    setConfirmDelete(null);
+    if (selectedCode === confirmDelete && subjects.length > 1) {
+      setSelectedCode(subjects.find(s => s.code !== confirmDelete)!.code);
+    }
+    show(`${subj?.name || 'Subject'} deleted`, 'info');
+  }
+
+  function addNewSubject() {
+    const code = (editValues.code || '').toUpperCase().trim();
+    if (!code || !editValues.name) { show('Code and name are required', 'error'); return; }
+    if (subjects.some(s => s.code === code)) { show(`Subject code ${code} already exists`, 'error'); return; }
+    const Ic = BookMarked;
+    setSubjects(curr => [...curr, { code, name: editValues.name, category: editValues.category || 'Science', grades: editValues.grades || 'JSS1 – SS3', type: editValues.type || 'Core', description: editValues.description || '', Ic }]);
+    setAddModal({ visible: false, mode: 'subject' });
+    setEditValues({});
+    setSelectedCode(code);
+    show(`${editValues.name} added`, 'success');
+  }
+
+  function addNewClassArm() {
+    const name = (editValues.className || '').toUpperCase().trim();
+    const armCode = (editValues.armCode || '').toUpperCase().trim();
+    const students = parseInt(editValues.armStudents || '0', 10) || 0;
+    if (!name || !armCode) { show('Class name and arm code are required', 'error'); return; }
+    if (classes.some(c => c.name === name)) {
+      // Add arm to existing class
+      setClasses(curr => curr.map(c => c.name === name ? { ...c, arms: [...c.arms, { code: armCode, students }], total: c.total + students, expanded: true } : c));
+      show(`${armCode} added to ${name}`, 'success');
+    } else {
+      setClasses(curr => [...curr, { id: name.toLowerCase(), name, arms: [{ code: armCode, students }], total: students, expanded: true }]);
+      show(`Class ${name} with arm ${armCode} added`, 'success');
+    }
+    setAddModal({ visible: false, mode: 'class' });
+    setEditValues({});
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: 1600, alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
+      {/* Page header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, gap: 16, flexWrap: 'wrap' }}>
+        <View style={{ flex: 1, minWidth: 280 }}>
+          <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Subjects & Classes</Text>
+          <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Manage classes, arms, and the subject library offered by the school.</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+          <Pressable onPress={() => { setEditValues({ className: '', armCode: '', armStudents: '' }); setAddModal({ visible: true, mode: 'class' }); }} style={{ borderWidth: 1, borderColor: '#D5E0E9', borderRadius: 7, flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 14, paddingVertical: 9, backgroundColor: '#FFFFFF' }}>
+            <Plus size={15} color="#274968" /><Text style={{ color: '#274968', fontSize: 12, fontWeight: '700' }}>Add Class/Arm</Text>
+          </Pressable>
+          <Pressable onPress={() => { setEditValues({ code: '', name: '', category: 'Science', grades: 'JSS1 – SS3', type: 'Core', description: '' }); setAddModal({ visible: true, mode: 'subject' }); }} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}>
+            <Plus size={15} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>Add Subject</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Main split layout: left = classes + subjects table, right = edit panel */}
+      <View style={{ flexDirection: 'row', gap: 16, alignItems: 'flex-start' }}>
+        {/* LEFT COLUMN */}
+        <View style={{ flex: 1.7, minWidth: 0 }}>
+          {/* Classes & Arms */}
+          <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE7EE', borderRadius: 8, padding: 15, marginBottom: 14 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+                <View style={{ width: 30, height: 30, borderRadius: 7, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}><Layers size={17} color="#08704F" /></View>
+                <View><Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Classes & Arms</Text><Text style={{ color: '#6A83A0', fontSize: 11, marginTop: 2 }}>{classes.length} classes · {classes.reduce((s, c) => s + c.arms.length, 0)} arms · {classes.reduce((s, c) => s + c.total, 0)} students</Text></View>
+              </View>
+            </View>
+
+            {filteredClasses.map(cls => (
+              <View key={cls.id} style={{ borderWidth: 1, borderColor: '#E3EAF0', borderRadius: 6, marginBottom: 7, overflow: 'hidden' }}>
+                <Pressable onPress={() => toggleClass(cls.id)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 11, backgroundColor: cls.expanded ? '#F0F7F4' : '#FFFFFF' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: '#003D31', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>{cls.name}</Text></View>
+                    <View>
+                      <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '700' }}>{cls.name}</Text>
+                      <Text style={{ color: '#6A83A0', fontSize: 10, marginTop: 2 }}>{cls.arms.length} arm{cls.arms.length > 1 ? 's' : ''} · {cls.total} students</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    {!cls.expanded && <View style={{ flexDirection: 'row', gap: 4 }}>{cls.arms.slice(0, 4).map(a => <View key={a.code} style={{ backgroundColor: '#E3EAF0', borderRadius: 9, paddingHorizontal: 7, paddingVertical: 2 }}><Text style={{ color: '#334F6E', fontSize: 8, fontWeight: '700' }}>{a.code}</Text></View>)}</View>}
+                    {cls.expanded ? <ChevronUp size={16} color="#45698D" /> : <ChevronDown size={16} color="#45698D" />}
+                  </View>
+                </Pressable>
+                {cls.expanded && (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#E3EAF0', backgroundColor: '#FAFCFB' }}>
+                    {cls.arms.map(a => (
+                      <Pressable key={a.code} onPress={() => show(`${a.code}: ${a.students} students`, 'info')} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: '#FFFFFF' }}>
+                        <View style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#08704F', fontSize: 9, fontWeight: '800' }}>{a.code.slice(-1)}</Text></View>
+                        <View><Text style={{ color: '#142F4D', fontSize: 11, fontWeight: '700' }}>{a.code}</Text><Text style={{ color: '#6A83A0', fontSize: 9, marginTop: 1 }}>{a.students} students</Text></View>
+                      </Pressable>
+                    ))}
+                    <Pressable onPress={() => { setEditValues({ className: cls.name, armCode: '', armStudents: '' }); setAddModal({ visible: true, mode: 'class' }); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: '#D5E0E9', borderStyle: 'dashed', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 12, backgroundColor: '#FFFFFF' }}>
+                      <Plus size={13} color="#274968" /><Text style={{ color: '#274968', fontSize: 10, fontWeight: '700' }}>Add Arm</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+
+          {/* Subject Library */}
+          <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE7EE', borderRadius: 8, padding: 15 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+                <View style={{ width: 30, height: 30, borderRadius: 7, backgroundColor: '#E0ECFF', alignItems: 'center', justifyContent: 'center' }}><BookMarked size={17} color="#236FD0" /></View>
+                <View><Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Subject Library</Text><Text style={{ color: '#6A83A0', fontSize: 11, marginTop: 2 }}>{subjects.length} subjects · {subjects.filter(s => s.type === 'Core').length} core · {subjects.filter(s => s.type === 'Elective').length} elective</Text></View>
+              </View>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={{ minWidth: 620 }}>
+                <View style={{ flexDirection: 'row', backgroundColor: '#F0F3F5', paddingVertical: 9, paddingHorizontal: 14, borderRadius: 5, marginBottom: 2 }}>
+                  {['Code', 'Subject Name', 'Category', 'Applicable Grade', 'Type', ''].map((h, i) => <Text key={h} style={{ flex: [0.55, 1.6, 1.1, 1.0, 0.75, 0.4][i], fontSize: 10, fontWeight: '800', color: '#334F6E' }}>{h}</Text>)}
+                </View>
+                {filteredSubjects.map(s => {
+                  const [cbg, cfg] = SUBJECT_CATEGORY_COLORS[s.category] || ['#E3EAF0', '#334F6E'];
+                  const isSel = s.code === selectedCode;
+                  return (
+                    <Pressable key={s.code} onPress={() => setSelectedCode(s.code)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#E8EEF3', backgroundColor: isSel ? '#F0F7F4' : 'transparent' }}>
+                      <View style={{ flex: 0.55 }}><View style={{ backgroundColor: '#003D31', borderRadius: 4, paddingHorizontal: 7, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '800' }}>{s.code}</Text></View></View>
+                      <View style={{ flex: 1.6, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        {s.Ic && <s.Ic size={14} color="#45698D" />}
+                        <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '600', color: '#213B57' }}>{s.name}</Text>
+                      </View>
+                      <View style={{ flex: 1.1 }}><View style={{ backgroundColor: cbg, borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: cfg, fontSize: 9, fontWeight: '700' }}>{s.category}</Text></View></View>
+                      <Text style={{ flex: 1.0, fontSize: 10, color: '#405D7D' }}>{s.grades}</Text>
+                      <View style={{ flex: 0.75 }}><View style={{ backgroundColor: s.type === 'Core' ? '#D9F4E6' : '#FFF0D4', borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: s.type === 'Core' ? '#08754F' : '#C27A08', fontSize: 9, fontWeight: '700' }}>{s.type}</Text></View></View>
+                      <View style={{ flex: 0.4, alignItems: 'flex-end' }}><MoreVertical size={15} color="#244666" /></View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* RIGHT COLUMN — Edit Subject Panel */}
+        <View style={{ flex: 1, minWidth: 280, maxWidth: 380 }}>
+          {selected ? (
+            <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE7EE', borderRadius: 8, padding: 18, position: 'sticky', top: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800' }}>Edit Subject</Text>
+                <Pressable onPress={() => show('More options', 'info')}><MoreVertical size={16} color="#244666" /></Pressable>
+              </View>
+
+              {/* Subject icon + name header */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#E3EAF0', marginBottom: 16 }}>
+                <View style={{ width: 48, height: 48, borderRadius: 10, backgroundColor: SUBJECT_CATEGORY_COLORS[selected.category]?.[0] || '#E3EAF0', alignItems: 'center', justifyContent: 'center' }}>
+                  {selected.Ic && <selected.Ic size={24} color={SUBJECT_CATEGORY_COLORS[selected.category]?.[1] || '#334F6E'} />}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 14, fontWeight: '800' }}>{selected.name}</Text>
+                  <Text style={{ color: '#6A83A0', fontSize: 10, marginTop: 3 }}>Code: {selected.code}</Text>
+                </View>
+              </View>
+
+              {/* Editable fields */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#405D7D', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Subject Code</Text>
+                <TextInput value={editValues.code ?? ''} onChangeText={v => setEditValues(c => ({ ...c, code: v }))} style={{ height: 36, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 10, color: '#19334F', fontSize: 12, backgroundColor: '#F8FBFD' }} />
+              </View>
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#405D7D', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Subject Name</Text>
+                <TextInput value={editValues.name ?? ''} onChangeText={v => setEditValues(c => ({ ...c, name: v }))} style={{ height: 36, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 10, color: '#19334F', fontSize: 12 }} />
+              </View>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#405D7D', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Category</Text>
+                  <TextInput value={editValues.category ?? ''} onChangeText={v => setEditValues(c => ({ ...c, category: v }))} style={{ height: 36, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 10, color: '#19334F', fontSize: 12 }} />
+                </View>
+                <View style={{ flex: 0.85 }}>
+                  <Text style={{ color: '#405D7D', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Type</Text>
+                  <TextInput value={editValues.type ?? ''} onChangeText={v => setEditValues(c => ({ ...c, type: v }))} style={{ height: 36, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 10, color: '#19334F', fontSize: 12 }} />
+                </View>
+              </View>
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: '#405D7D', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Applicable Grades</Text>
+                <TextInput value={editValues.grades ?? ''} onChangeText={v => setEditValues(c => ({ ...c, grades: v }))} style={{ height: 36, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 10, color: '#19334F', fontSize: 12 }} />
+              </View>
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: '#405D7D', fontSize: 10, fontWeight: '700', marginBottom: 5 }}>Description</Text>
+                <TextInput value={editValues.description ?? ''} onChangeText={v => setEditValues(c => ({ ...c, description: v }))} multiline numberOfLines={4} style={{ minHeight: 84, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 8, color: '#19334F', fontSize: 11, textAlignVertical: 'top' }} />
+              </View>
+
+              {/* Action buttons */}
+              <View style={{ borderTopWidth: 1, borderTopColor: '#E3EAF0', paddingTop: 14, gap: 8 }}>
+                <Pressable onPress={() => setConfirmDelete(selected.code)} style={{ borderWidth: 1, borderColor: '#F4C9C7', backgroundColor: '#FFF9F8', borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 9 }}>
+                  <Trash2 size={14} color="#D92E32" /><Text style={{ color: '#D92E32', fontSize: 11, fontWeight: '700' }}>Delete Subject</Text>
+                </Pressable>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Pressable onPress={() => { if (selected) setEditValues({ code: selected.code, name: selected.name, category: selected.category, grades: selected.grades, type: selected.type, description: selected.description }); show('Changes discarded', 'info'); }} style={{ flex: 1, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 9 }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+                  <Pressable onPress={saveSubject} style={{ flex: 1, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9 }}><Save size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Save</Text></Pressable>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE7EE', borderRadius: 8, padding: 28, alignItems: 'center' }}>
+              <BookMarked size={36} color="#B8C7D5" />
+              <Text style={{ color: '#647F9E', fontSize: 13, fontWeight: '600', marginTop: 12 }}>Select a subject</Text>
+              <Text style={{ color: '#7B93AB', fontSize: 11, marginTop: 4, textAlign: 'center' }}>Click any row in the Subject Library to view and edit its details here.</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Add Modal */}
+      <Modal visible={addModal.visible} transparent animationType="fade" onRequestClose={() => setAddModal(c => ({ ...c, visible: false }))}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(8,25,38,0.45)', alignItems: 'center', justifyContent: 'center', padding: 20 }} onPress={() => setAddModal(c => ({ ...c, visible: false }))}>
+          <View style={{ width: '100%', maxWidth: 480, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <Text style={{ color: '#142F4D', fontSize: 17, fontWeight: '800' }}>{addModal.mode === 'subject' ? 'Add Subject' : 'Add Class / Arm'}</Text>
+              <Pressable onPress={() => setAddModal(c => ({ ...c, visible: false }))}><X size={19} color="#45698D" /></Pressable>
+            </View>
+            {addModal.mode === 'subject' ? (
+              <View>
+                <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+                  <View style={{ flex: 0.5 }}>
+                    <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Code</Text>
+                    <TextInput value={editValues.code ?? ''} onChangeText={v => setEditValues(c => ({ ...c, code: v }))} placeholder="e.g. HIS" placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Subject Name</Text>
+                    <TextInput value={editValues.name ?? ''} onChangeText={v => setEditValues(c => ({ ...c, name: v }))} placeholder="e.g. History" placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Category</Text>
+                    <TextInput value={editValues.category ?? ''} onChangeText={v => setEditValues(c => ({ ...c, category: v }))} placeholder="Science / Arts / ..." placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Type</Text>
+                    <TextInput value={editValues.type ?? ''} onChangeText={v => setEditValues(c => ({ ...c, type: v }))} placeholder="Core / Elective" placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                  </View>
+                </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Applicable Grades</Text>
+                  <TextInput value={editValues.grades ?? ''} onChangeText={v => setEditValues(c => ({ ...c, grades: v }))} placeholder="e.g. JSS1 – SS3" placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                </View>
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Description</Text>
+                  <TextInput value={editValues.description ?? ''} onChangeText={v => setEditValues(c => ({ ...c, description: v }))} multiline numberOfLines={3} placeholder="Brief description of the subject..." placeholderTextColor="#8097B0" style={{ minHeight: 70, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, paddingVertical: 8, color: '#19334F', fontSize: 12, textAlignVertical: 'top' }} />
+                </View>
+              </View>
+            ) : (
+              <View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Class Name (existing or new)</Text>
+                  <TextInput value={editValues.className ?? ''} onChangeText={v => setEditValues(c => ({ ...c, className: v }))} placeholder="e.g. JSS1 or SS4" placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                </View>
+                <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Arm Code</Text>
+                    <TextInput value={editValues.armCode ?? ''} onChangeText={v => setEditValues(c => ({ ...c, armCode: v }))} placeholder="e.g. JSS1D" placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Students</Text>
+                    <TextInput value={editValues.armStudents ?? ''} onChangeText={v => setEditValues(c => ({ ...c, armStudents: v }))} placeholder="0" keyboardType="numeric" placeholderTextColor="#8097B0" style={{ height: 39, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6, paddingHorizontal: 11, color: '#19334F', fontSize: 12 }} />
+                  </View>
+                </View>
+              </View>
+            )}
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
+              <Pressable onPress={() => setAddModal(c => ({ ...c, visible: false }))} style={{ paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6 }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={addModal.mode === 'subject' ? addNewSubject : addNewClassArm} style={{ backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}><Plus size={15} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Add</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Delete Confirmation */}
+      <Modal visible={!!confirmDelete} transparent animationType="fade" onRequestClose={() => setConfirmDelete(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(8,25,38,0.45)', alignItems: 'center', justifyContent: 'center', padding: 20 }} onPress={() => setConfirmDelete(null)}>
+          <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#FFF9F8', borderWidth: 1, borderColor: '#F4C9C7', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={18} color="#D92E32" /></View>
+              <Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>Delete Subject?</Text>
+            </View>
+            <Text style={{ color: '#647F9E', fontSize: 12, lineHeight: 18 }}>This will remove <Text style={{ fontWeight: '700', color: '#213B57' }}>{subjects.find(s => s.code === confirmDelete)?.name}</Text> from the subject library. Classes currently offering this subject will need to be reassigned. This action cannot be undone.</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+              <Pressable onPress={() => setConfirmDelete(null)} style={{ paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: '#D7E1E9', borderRadius: 6 }}><Text style={{ color: '#405D7D', fontSize: 11, fontWeight: '700' }}>Cancel</Text></Pressable>
+              <Pressable onPress={deleteSubject} style={{ backgroundColor: '#D92E32', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 15, paddingVertical: 9 }}><Trash2 size={14} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Delete</Text></Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+    </ScrollView>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -351,9 +725,11 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard and School Configuration */}
+          {/* CONTENT — switches between Dashboard, School Configuration, and Subjects & Classes */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
+          ) : active === 'Subjects & Classes' ? (
+            <SubjectsAndClassesScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
