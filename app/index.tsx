@@ -2479,7 +2479,7 @@ function ReviewCompileScreen({ search: globalSearch, show }: { search: string; s
 
   return (
     <View style={{ flex: 1, flexDirection: 'row', minHeight: 0 }}>
-      <ScrollView style={{ flex: 1, minWidth: 0 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: compact ? '100%' : 1100, alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1, minWidth: 0 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, width: '100%' }} showsVerticalScrollIndicator={false}>
         {/* Page header */}
         <View style={{ marginBottom: 18 }}>
           <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Review & Compile</Text>
@@ -2511,7 +2511,7 @@ function ReviewCompileScreen({ search: globalSearch, show }: { search: string; s
         {/* Workspace: batches + review */}
         <View style={{ flexDirection: veryCompact ? 'column' : 'row', gap: 14 }}>
           {/* Left: Batches panel */}
-          <View style={{ width: veryCompact ? '100%' : 320, flexShrink: 0 }}>
+          <View style={{ width: veryCompact ? '100%' : 280, flexShrink: 0 }}>
             <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 12 }}>
               <Text style={{ color: '#142F4D', fontSize: 14, fontWeight: '800', marginBottom: 10 }}>Uploaded Batches</Text>
               <View style={{ flexDirection: 'row', gap: 7, marginBottom: 10 }}>
@@ -2612,8 +2612,8 @@ function ReviewCompileScreen({ search: globalSearch, show }: { search: string; s
               )}
 
               {/* Score table */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={{ minWidth: 1080 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator>
+                <View style={{ minWidth: 900 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 36, paddingHorizontal: 8, backgroundColor: '#F0F3F6', borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
                     <Pressable onPress={toggleSelectAll} style={{ width: 28, height: 22, justifyContent: 'center' }}>
                       <View style={{ width: 14, height: 14, borderRadius: 3, borderWidth: 1.5, borderColor: selected.length === filteredRecords.length && filteredRecords.length > 0 ? '#08754F' : '#9BAEC0', backgroundColor: selected.length === filteredRecords.length && filteredRecords.length > 0 ? '#08754F' : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
