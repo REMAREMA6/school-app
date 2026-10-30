@@ -12,6 +12,7 @@ import {
   Languages, Calculator, Globe2, Code2, Leaf, Scale, TrendingUp, Microscope,
   ChevronLeft, ChevronRight, Printer, ShieldCheck, Clock3, User as UserIcon,
   Trophy, GripVertical, SlidersHorizontal, Mail, Phone, KeyRound, Briefcase,
+  FileSpreadsheet, Upload, ArrowRight as ArrowRightIcon, RefreshCw,
 } from 'lucide-react-native';
 
 const C = {
@@ -1882,6 +1883,452 @@ function UsersPermissionsScreen({ search: globalSearch, show }: { search: string
   );
 }
 
+// === UPLOAD RESULTS DATA ===
+const UPLOAD_HISTORY = [
+  { id: '1', batch: 'JSS1A_Maths_T2_2025', sourceType: 'Excel/CSV', classArm: 'JSS1A', subject: 'Mathematics', uploadedBy: 'Tunde Balogun', date: 'Aug 24, 2025 10:32 AM', records: 42, status: 'Under Review' },
+  { id: '2', batch: 'SS2B_Eng_T2_2025', sourceType: 'PDF', classArm: 'SS2B', subject: 'English Language', uploadedBy: 'Adebayo Johnson', date: 'Aug 23, 2025 04:17 PM', records: 38, status: 'Draft' },
+  { id: '3', batch: 'JSS3A_Sci_T2_2025', sourceType: 'Excel/CSV', classArm: 'JSS3A', subject: 'Biology', uploadedBy: 'Emmanuel Ibe', date: 'Aug 22, 2025 11:45 AM', records: 36, status: 'Verified' },
+  { id: '4', batch: 'SS1B_Comp_T2_2025', sourceType: 'PDF', classArm: 'SS1B', subject: 'Computer Studies', uploadedBy: 'Grace Okafor', date: 'Aug 21, 2025 02:20 PM', records: 41, status: 'Rejected' },
+  { id: '5', batch: 'JSS2A_Eng_T2_2025', sourceType: 'Excel/CSV', classArm: 'JSS2A', subject: 'English Language', uploadedBy: 'Blessing Adekunle', date: 'Aug 20, 2025 09:15 AM', records: 40, status: 'Under Review' },
+  { id: '6', batch: 'SS3C_Gov_T2_2025', sourceType: 'Excel/CSV', classArm: 'SS3C', subject: 'Government', uploadedBy: 'Fatima Hashim', date: 'Aug 18, 2025 03:42 PM', records: 37, status: 'Verified' },
+];
+
+const UPLOAD_STATUS_COLORS: Record<string, [string, string]> = {
+  'Under Review': ['#FFF0D4', '#C27A08'],
+  'Draft': ['#E0ECFF', '#176DDA'],
+  'Verified': ['#D9F4E6', '#08754F'],
+  'Rejected': ['#FFE1E1', '#D92E32'],
+};
+
+// === UPLOAD RESULTS SCREEN ===
+function UploadResultsScreen({ search: globalSearch, show }: { search: string; show: (msg: string, type?: string) => void }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 1100;
+  const [step, setStep] = useState(1);
+  const [sourceType, setSourceType] = useState<'Excel/CSV' | 'PDF'>('Excel/CSV');
+  const [session, setSession] = useState('2024/2025');
+  const [term, setTerm] = useState('Second Term');
+  const [classArm, setClassArm] = useState('JSS1A');
+  const [subject, setSubject] = useState('Mathematics');
+  const [assessmentConfig, setAssessmentConfig] = useState('JSS1 - Mathematics (40/60)');
+  const [selectedFile, setSelectedFile] = useState<{ name: string; sizeKB: number } | null>(null);
+  const [validationMsg, setValidationMsg] = useState('');
+  const [historySearch, setHistorySearch] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('All Sources');
+  const [statusFilter, setStatusFilter] = useState('All Statuses');
+  const [page, setPage] = useState(1);
+  const [viewUpload, setViewUpload] = useState<any>(null);
+  const [rowActions, setRowActions] = useState<string | null>(null);
+
+  const sessions = ['2024/2025', '2025/2026'];
+  const terms = ['First Term', 'Second Term', 'Third Term'];
+  const classArms = ['JSS1A', 'JSS1B', 'JSS2A', 'JSS2B', 'JSS3A', 'SS1A', 'SS1B', 'SS2A', 'SS2B', 'SS3A', 'SS3B', 'SS3C'];
+  const subjects = ['Mathematics', 'English Language', 'Biology', 'Chemistry', 'Physics', 'Computer Studies', 'Government', 'Civic Education'];
+  const assessmentOptions = [`${classArm.split(/(\d+)/)[0]}${classArm.match(/\d+/)?.[0] || ''} - ${subject} (40/60)`];
+  const sources = ['All Sources', 'Excel/CSV', 'PDF'];
+  const statuses = ['All Statuses', 'Under Review', 'Draft', 'Verified', 'Rejected'];
+
+  const effectiveSearch = (historySearch || globalSearch).trim().toLowerCase();
+  const filteredHistory = useMemo(() => UPLOAD_HISTORY.filter(u => {
+    const matchesSearch = !effectiveSearch || [u.batch, u.sourceType, u.classArm, u.subject, u.uploadedBy, u.status].some(v => v.toLowerCase().includes(effectiveSearch));
+    const matchesSource = sourceFilter === 'All Sources' || u.sourceType === sourceFilter;
+    const matchesStatus = statusFilter === 'All Statuses' || u.status === statusFilter;
+    return matchesSearch && matchesSource && matchesStatus;
+  }), [effectiveSearch, sourceFilter, statusFilter]);
+
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(filteredHistory.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const visibleHistory = filteredHistory.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  function resetWizard() {
+    setStep(1);
+    setSourceType('Excel/CSV');
+    setSession('2024/2025');
+    setTerm('Second Term');
+    setClassArm('JSS1A');
+    setSubject('Mathematics');
+    setAssessmentConfig('JSS1 - Mathematics (40/60)');
+    setSelectedFile(null);
+    setValidationMsg('');
+  }
+
+  function pickFile() {
+    // Demo file picker - simulates selecting a file (since this is a static web bundle, no real picker)
+    const fakeFiles = sourceType === 'Excel/CSV'
+      ? [{ name: 'JSS1A_Mathematics_T2_2025.xlsx', sizeKB: 245 }, { name: 'scores_export.csv', sizeKB: 89 }]
+      : [{ name: 'Scanned_Results_JSS1A.pdf', sizeKB: 1840 }, { name: 'result_sheet_SS1B.pdf', sizeKB: 2210 }];
+    const pick = fakeFiles[Math.floor(Math.random() * fakeFiles.length)];
+    if (pick.sizeKB > 10240) { setValidationMsg('File exceeds 10 MB maximum size.'); return; }
+    const expectedExts = sourceType === 'Excel/CSV' ? ['.xlsx', '.csv'] : ['.pdf'];
+    const ext = '.' + pick.name.split('.').pop()?.toLowerCase();
+    if (!expectedExts.includes(ext)) { setValidationMsg(`File type ${ext} is not supported for ${sourceType} source.`); return; }
+    setSelectedFile(pick);
+    setValidationMsg('');
+  }
+
+  function nextStep() {
+    if (step === 1) {
+      if (!selectedFile) { setValidationMsg('Please select a file to upload.'); return; }
+      setValidationMsg('');
+      setStep(2);
+    } else if (step === 2) {
+      setStep(3);
+    }
+  }
+
+  function confirmUpload() {
+    show(`Upload submitted for ${classArm} ${subject} — ${selectedFile?.name || 'no file'} (demo flow, not persisted to backend)`, 'info');
+    resetWizard();
+  }
+
+  function clearFilters() {
+    setHistorySearch('');
+    setSourceFilter('All Sources');
+    setStatusFilter('All Statuses');
+    setPage(1);
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: 1600, alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
+      {/* Page header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 15, marginBottom: 18, flexWrap: 'wrap' }}>
+        <View style={{ flex: 1, minWidth: 280 }}>
+          <Text style={{ color: '#064333', fontSize: 26, fontWeight: '800', letterSpacing: -0.3 }}>Upload Results</Text>
+          <Text style={{ color: '#647F9E', fontSize: 13, marginTop: 5 }}>Import student scores from spreadsheets or scanned result sheets.</Text>
+        </View>
+        <Pressable onPress={resetWizard} style={{ backgroundColor: '#00513D', borderRadius: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 37, paddingHorizontal: 15 }}>
+          <Plus size={16} color="#FFFFFF" /><Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>New Upload</Text>
+        </Pressable>
+      </View>
+
+      {/* Workflow stepper */}
+      <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 18, marginBottom: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          {[
+            { num: 1, label: 'Select Source', desc: 'Choose file type and upload your file' },
+            { num: 2, label: 'Preview & Edit', desc: 'Review data, fix errors, and map columns' },
+            { num: 3, label: 'Confirm Upload', desc: 'Save and submit for verification' },
+          ].map((s, i) => (
+            <React.Fragment key={s.num}>
+              <View style={{ flex: 1, alignItems: 'center', minWidth: 0 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: step === s.num ? '#00513D' : step > s.num ? '#08754F' : '#DCE6EE', alignItems: 'center', justifyContent: 'center', borderWidth: step === s.num ? 2 : 0, borderColor: '#9DD9BF' }}>
+                  {step > s.num ? <Check size={18} color="#FFFFFF" /> : <Text style={{ color: step === s.num ? '#FFFFFF' : '#647F9E', fontSize: 15, fontWeight: '800' }}>{s.num}</Text>}
+                </View>
+                <Text style={{ color: step === s.num ? '#00513D' : step > s.num ? '#08754F' : '#647F9E', fontSize: 12, fontWeight: '800', marginTop: 8 }}>{s.label}</Text>
+                <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 4, textAlign: 'center', lineHeight: 14 }}>{s.desc}</Text>
+              </View>
+              {i < 2 && <View style={{ height: 2, flex: 0.3, backgroundColor: step > s.num ? '#08754F' : '#DCE6EE', marginHorizontal: -4, marginBottom: 36 }} />}
+            </React.Fragment>
+          ))}
+        </View>
+      </View>
+
+      {/* Step 1: Select Source & Upload Details */}
+      {step === 1 && (
+        <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 18, marginBottom: 14 }}>
+          <View style={{ flexDirection: compact ? 'column' : 'row', gap: 24 }}>
+            {/* Left: Source selector */}
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>Start New Upload</Text>
+              <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 14 }}>Choose your source type and provide the required details.</Text>
+              {/* Excel/CSV card */}
+              <Pressable onPress={() => setSourceType('Excel/CSV')} style={{ borderWidth: 2, borderColor: sourceType === 'Excel/CSV' ? '#08754F' : '#DCE6EE', borderRadius: 8, padding: 14, marginBottom: 10, flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: sourceType === 'Excel/CSV' ? '#F0F8F4' : '#FFFFFF' }}>
+                <View style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}><FileSpreadsheet size={24} color="#08704F" /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Excel/CSV Spreadsheet</Text>
+                  <Text style={{ color: '#647F9E', fontSize: 11, marginTop: 4 }}>Upload results from Excel or CSV files.</Text>
+                </View>
+                {sourceType === 'Excel/CSV' && <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#08754F', alignItems: 'center', justifyContent: 'center' }}><Check size={14} color="#FFFFFF" /></View>}
+              </Pressable>
+              {/* PDF card */}
+              <Pressable onPress={() => setSourceType('PDF')} style={{ borderWidth: 2, borderColor: sourceType === 'PDF' ? '#08754F' : '#DCE6EE', borderRadius: 8, padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: sourceType === 'PDF' ? '#F0F8F4' : '#FFFFFF' }}>
+                <View style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: '#FFE1E1', alignItems: 'center', justifyContent: 'center' }}><FileText size={24} color="#D92E32" /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '800' }}>Scanned PDF Result Sheet</Text>
+                  <Text style={{ color: '#647F9E', fontSize: 11, marginTop: 4 }}>Upload scanned result sheets (PDF).</Text>
+                </View>
+                {sourceType === 'PDF' && <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#08754F', alignItems: 'center', justifyContent: 'center' }}><Check size={14} color="#FFFFFF" /></View>}
+              </Pressable>
+            </View>
+
+            {/* Right: Upload details */}
+            <View style={{ flex: 1.2, minWidth: 0 }}>
+              <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>Upload Details</Text>
+              <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 14 }}>All fields are required</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+                {[
+                  { label: 'Academic Session', value: session, setter: setSession, options: sessions },
+                  { label: 'Term', value: term, setter: setTerm, options: terms },
+                  { label: 'Class Arm', value: classArm, setter: setClassArm, options: classArms },
+                  { label: 'Subject', value: subject, setter: setSubject, options: subjects },
+                ].map(f => (
+                  <View key={f.label} style={{ flexBasis: '47%', flexGrow: 1, minWidth: 200 }}>
+                    <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>{f.label}</Text>
+                    <Pressable onPress={() => f.setter(f.options[(f.options.indexOf(f.value) + 1) % f.options.length])} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                      <Text style={{ color: '#142F4D', fontSize: 12 }}>{f.value}</Text>
+                      <ChevronDown size={15} color="#647F9E" />
+                    </Pressable>
+                  </View>
+                ))}
+                <View style={{ flexBasis: '100%', flexGrow: 1 }}>
+                  <Text style={{ color: '#244361', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>Assessment Configuration</Text>
+                  <Pressable onPress={() => setAssessmentConfig(`${classArm.split(/(\d+)/)[0]}${classArm.match(/\d+/)?.[0] || ''} - ${subject} (40/60)`)} style={{ height: 38, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }}>
+                    <Text style={{ color: '#142F4D', fontSize: 12 }}>{assessmentConfig}</Text>
+                    <ChevronDown size={15} color="#647F9E" />
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* File picker */}
+              <Pressable onPress={pickFile} style={{ marginTop: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: selectedFile ? '#08754F' : '#B8C7D5', borderRadius: 8, padding: 24, alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: selectedFile ? '#F0F8F4' : '#FAFCFD' }}>
+                {selectedFile ? (
+                  <>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}>
+                        {sourceType === 'Excel/CSV' ? <FileSpreadsheet size={22} color="#08704F" /> : <FileText size={22} color="#D92E32" />}
+                      </View>
+                      <View>
+                        <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '700' }}>{selectedFile.name}</Text>
+                        <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>{(selectedFile.sizeKB / 1024).toFixed(2)} MB</Text>
+                      </View>
+                    </View>
+                    <Pressable onPress={() => { setSelectedFile(null); setValidationMsg(''); }} style={{ marginTop: 6, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, backgroundColor: '#FFFFFF' }}>
+                      <Text style={{ color: '#41698F', fontSize: 10, fontWeight: '600' }}>Remove file</Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <>
+                    <CloudUpload size={36} color="#41698F" />
+                    <Text style={{ color: '#142F4D', fontSize: 13, fontWeight: '700' }}>Click to select file or drag and drop</Text>
+                    <Text style={{ color: '#647F9E', fontSize: 11 }}>Supports: .xlsx, .csv, .pdf (Max 10MB)</Text>
+                  </>
+                )}
+              </Pressable>
+              {validationMsg && (
+                <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderWidth: 1, borderColor: '#FFD1D5', backgroundColor: '#FFF0F1', borderRadius: 6 }}>
+                  <AlertCircle size={15} color="#D92E32" />
+                  <Text style={{ color: '#D92E32', fontSize: 11, fontWeight: '600' }}>{validationMsg}</Text>
+                </View>
+              )}
+
+              {/* Buttons */}
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
+                <Pressable onPress={resetWizard} style={{ minHeight: 35, paddingHorizontal: 16, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+                  <Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={nextStep} style={{ minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Next: Preview & Edit</Text>
+                  <ArrowRightIcon size={14} color="#FFFFFF" />
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Step 2: Preview & Edit */}
+      {step === 2 && (
+        <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 18, marginBottom: 14 }}>
+          <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>Preview & Edit</Text>
+          <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 14 }}>Review data, fix errors, and map columns before confirming.</Text>
+          {/* Selected file summary */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, marginBottom: 14, backgroundColor: '#FAFCFD' }}>
+            <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: '#DFF5E9', alignItems: 'center', justifyContent: 'center' }}>
+              {sourceType === 'Excel/CSV' ? <FileSpreadsheet size={20} color="#08704F" /> : <FileText size={20} color="#D92E32" />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '700' }}>{selectedFile?.name}</Text>
+              <Text style={{ color: '#647F9E', fontSize: 10, marginTop: 3 }}>{(selectedFile!.sizeKB / 1024).toFixed(2)} MB · {sourceType}</Text>
+            </View>
+          </View>
+          {/* Parser limitation notice */}
+          {sourceType === 'PDF' ? (
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14, borderWidth: 1, borderColor: '#FFE1B5', backgroundColor: '#FFF7E6', borderRadius: 8 }}>
+              <AlertCircle size={18} color="#D58A13" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#8B5A00', fontSize: 12, fontWeight: '800' }}>PDF parsing not implemented</Text>
+                <Text style={{ color: '#6B5A3F', fontSize: 11, marginTop: 4, lineHeight: 16 }}>This demo does not include OCR or PDF extraction. In production, integrate a PDF parser (e.g. pdf-parse) or OCR service to extract student scores from scanned result sheets.</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14, borderWidth: 1, borderColor: '#DCE6EE', backgroundColor: '#FAFCFD', borderRadius: 8 }}>
+              <AlertCircle size={18} color="#41698F" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#142F4D', fontSize: 12, fontWeight: '800' }}>Spreadsheet parser not wired</Text>
+                <Text style={{ color: '#647F9E', fontSize: 11, marginTop: 4, lineHeight: 16 }}>Connect a parser (e.g. xlsx / papaparse) to display parsed rows and column-mapping controls here. No fake parsed data is shown.</Text>
+              </View>
+            </View>
+          )}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 14 }}>
+            <Pressable onPress={() => setStep(1)} style={{ minHeight: 35, paddingHorizontal: 16, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>← Back to Source</Text>
+            </Pressable>
+            <Pressable onPress={nextStep} style={{ minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Continue to Confirm</Text>
+              <ArrowRightIcon size={14} color="#FFFFFF" />
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {/* Step 3: Confirm Upload */}
+      {step === 3 && (
+        <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 18, marginBottom: 14 }}>
+          <Text style={{ color: '#142F4D', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>Confirm Upload</Text>
+          <Text style={{ color: '#647F9E', fontSize: 11, marginBottom: 14 }}>Review the summary and submit for verification.</Text>
+          <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6 }}>
+            {[
+              ['Academic Session', session],
+              ['Term', term],
+              ['Class Arm', classArm],
+              ['Subject', subject],
+              ['Assessment Configuration', assessmentConfig],
+              ['File Name', selectedFile?.name || '—'],
+              ['File Size', selectedFile ? `${(selectedFile.sizeKB / 1024).toFixed(2)} MB` : '—'],
+              ['Source Type', sourceType],
+            ].map(([label, value]: any, i: number) => (
+              <View key={label} style={{ flexDirection: 'row', paddingVertical: 11, paddingHorizontal: 14, borderBottomWidth: i < 7 ? 1 : 0, borderBottomColor: '#E8EEF3' }}>
+                <Text style={{ flex: 1, color: '#647F9E', fontSize: 11 }}>{label}</Text>
+                <Text style={{ flex: 1.3, color: '#142F4D', fontSize: 11, fontWeight: '600' }}>{value}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 12, padding: 12, borderWidth: 1, borderColor: '#FFE1B5', backgroundColor: '#FFF7E6', borderRadius: 8 }}>
+            <AlertCircle size={16} color="#D58A13" />
+            <Text style={{ color: '#6B5A3F', fontSize: 11, flex: 1, lineHeight: 16 }}>Demo flow only — no records are persisted or submitted for verification. Wire the action to your upload API for production use.</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 14 }}>
+            <Pressable onPress={() => setStep(2)} style={{ minHeight: 35, paddingHorizontal: 16, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
+              <Text style={{ color: '#274968', fontSize: 11, fontWeight: '700' }}>← Back to Preview</Text>
+            </Pressable>
+            <Pressable onPress={confirmUpload} style={{ minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <CloudUpload size={14} color="#FFFFFF" />
+              <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Submit Upload</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {/* Upload History */}
+      <View style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 8, padding: 14 }}>
+        <View style={{ marginBottom: 10 }}>
+          <Text style={{ color: '#142F4D', fontSize: 16, fontWeight: '800' }}>Upload History</Text>
+          <Text style={{ color: '#647F9E', fontSize: 11, marginTop: 4 }}>View and manage your uploaded result files. Uploaded data is reviewed before it becomes verified score data.</Text>
+        </View>
+
+        {/* Filters */}
+        <View style={{ flexDirection: 'row', gap: 9, marginBottom: 10, flexWrap: 'wrap' }}>
+          <View style={{ flex: 1, minWidth: 200, height: 36, flexDirection: 'row', alignItems: 'center', gap: 9, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, paddingHorizontal: 10, backgroundColor: '#FFFFFF' }}>
+            <Search size={16} color="#8299B1" />
+            <TextInput value={historySearch} onChangeText={v => { setHistorySearch(v); setPage(1); }} placeholder="Search uploads..." placeholderTextColor="#8097B0" style={{ flex: 1, fontSize: 11, color: '#142F4D', padding: 0 }} />
+          </View>
+          <Pressable onPress={() => { setSourceFilter(sources[(sources.indexOf(sourceFilter) + 1) % sources.length]); setPage(1); }} style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+            <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{sourceFilter}</Text><ChevronDown size={15} color="#41698F" />
+          </Pressable>
+          <Pressable onPress={() => { setStatusFilter(statuses[(statuses.indexOf(statusFilter) + 1) % statuses.length]); setPage(1); }} style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+            <Text style={{ color: '#244361', fontSize: 11, fontWeight: '600' }}>{statusFilter}</Text><ChevronDown size={15} color="#41698F" />
+          </Pressable>
+          <Pressable onPress={clearFilters} style={{ minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, backgroundColor: '#FFFFFF' }}>
+            <RefreshCw size={14} color="#41698F" /><Text style={{ color: '#41698F', fontSize: 11, fontWeight: '600' }}>Clear Filters</Text>
+          </Pressable>
+        </View>
+
+        {/* Table */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={{ minWidth: 1100 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 38, paddingHorizontal: 10, backgroundColor: '#F0F3F6', borderTopLeftRadius: 5, borderTopRightRadius: 5 }}>
+              {['Batch Name', 'Source', 'Class Arm', 'Subject', 'Uploaded By', 'Upload Date', 'Records', 'Status', 'Actions'].map((h, i) => (
+                <Text key={h} style={{ width: [180, 100, 80, 130, 130, 145, 65, 100, 90][i], fontSize: 10, fontWeight: '800', color: '#244361', paddingRight: 5 }}>{h}</Text>
+              ))}
+            </View>
+            {visibleHistory.map(u => {
+              const [sbg, sfg] = UPLOAD_STATUS_COLORS[u.status] || ['#E2EAF0', '#334F6E'];
+              return (
+                <View key={u.id} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 46, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                  <Text numberOfLines={1} style={{ width: 180, fontSize: 11, fontWeight: '600', color: '#355779', paddingRight: 7 }}>{u.batch}</Text>
+                  <View style={{ width: 100, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {u.sourceType === 'Excel/CSV' ? <FileSpreadsheet size={14} color="#08704F" /> : <FileText size={14} color="#D92E32" />}
+                    <Text style={{ fontSize: 10, color: '#355779' }}>{u.sourceType}</Text>
+                  </View>
+                  <Text style={{ width: 80, fontSize: 10, color: '#355779', paddingRight: 5 }}>{u.classArm}</Text>
+                  <Text numberOfLines={1} style={{ width: 130, fontSize: 10, color: '#355779', paddingRight: 5 }}>{u.subject}</Text>
+                  <Text numberOfLines={1} style={{ width: 130, fontSize: 10, color: '#355779', paddingRight: 5 }}>{u.uploadedBy}</Text>
+                  <Text style={{ width: 145, fontSize: 10, color: '#355779', paddingRight: 5 }}>{u.date}</Text>
+                  <Text style={{ width: 65, fontSize: 10, color: '#355779', fontWeight: '700', paddingRight: 5 }}>{u.records}</Text>
+                  <View style={{ width: 100 }}><View style={{ backgroundColor: sbg, borderRadius: 11, paddingHorizontal: 9, paddingVertical: 3, alignSelf: 'flex-start' }}><Text style={{ color: sfg, fontSize: 9, fontWeight: '700' }}>{u.status}</Text></View></View>
+                  <View style={{ width: 90, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Pressable onPress={() => setViewUpload(u)} style={{ width: 28, height: 28, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><Eye size={14} color="#274968" /></Pressable>
+                    <Pressable onPress={() => setRowActions(rowActions === u.id ? null : u.id)} style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center' }}><MoreVertical size={16} color="#41698F" /></Pressable>
+                    {rowActions === u.id && (
+                      <View style={{ position: 'absolute', top: 30, right: 0, width: 140, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6, zIndex: 100, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}>
+                        {[['View Details', () => { setViewUpload(u); setRowActions(null); }], ['Download', () => { show(`Download requested for ${u.batch} (demo only)`, 'info'); setRowActions(null); }], [u.status === 'Rejected' ? 'Resubmit' : 'Archive', () => { show(`${u.status === 'Rejected' ? 'Resubmit' : 'Archive'} requested for ${u.batch} (demo only)`, 'info'); setRowActions(null); }]].map(([label, action]: any) => (
+                          <Pressable key={label} onPress={action} style={{ paddingHorizontal: 12, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#E8EEF3' }}>
+                            <Text style={{ color: '#244361', fontSize: 11, fontWeight: '500' }}>{label}</Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+            {!visibleHistory.length && <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#647F9E', fontSize: 12 }}>No uploads match your filters.</Text></View>}
+          </View>
+        </ScrollView>
+
+        {/* Pagination */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 12 }}>
+          <Text style={{ color: '#647F9E', fontSize: 10 }}>Showing {filteredHistory.length ? (safePage - 1) * pageSize + 1 : 0}–{Math.min(safePage * pageSize, filteredHistory.length)} of {filteredHistory.length} uploads</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Pressable onPress={() => setPage(Math.max(1, safePage - 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronLeft size={16} color="#41698F" /></Pressable>
+            {Array.from({ length: Math.min(3, pageCount) }, (_, i) => i + 1).map(p => (
+              <Pressable key={p} onPress={() => setPage(p)} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: safePage === p ? '#006044' : '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: safePage === p ? '#006044' : '#FFFFFF' }}>
+                <Text style={{ color: safePage === p ? '#FFFFFF' : '#41698F', fontSize: 11, fontWeight: safePage === p ? '800' : '500' }}>{p}</Text>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setPage(Math.min(pageCount, safePage + 1))} style={{ minWidth: 28, height: 29, paddingHorizontal: 6, borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}><ChevronRight size={16} color="#41698F" /></Pressable>
+          </View>
+        </View>
+      </View>
+
+      {/* View Upload Modal */}
+      {viewUpload && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setViewUpload(null)}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(6,28,40,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }} onPress={() => setViewUpload(null)}>
+            <View style={{ width: '100%', maxWidth: 480, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 22 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#E2EAF0' }}>
+                <Text style={{ color: '#142F4D', fontSize: 17, fontWeight: '800' }}>Upload Details</Text>
+                <Pressable onPress={() => setViewUpload(null)}><X size={19} color="#41698F" /></Pressable>
+              </View>
+              <View style={{ borderWidth: 1, borderColor: '#DCE6EE', borderRadius: 6 }}>
+                {[
+                  ['Batch Name', viewUpload.batch],
+                  ['Source Type', viewUpload.sourceType],
+                  ['Class Arm', viewUpload.classArm],
+                  ['Subject', viewUpload.subject],
+                  ['Uploaded By', viewUpload.uploadedBy],
+                  ['Upload Date', viewUpload.date],
+                  ['Records', String(viewUpload.records)],
+                  ['Status', viewUpload.status],
+                ].map(([label, value]: any, i: number) => (
+                  <View key={label} style={{ flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: i < 7 ? 1 : 0, borderBottomColor: '#E8EEF3' }}>
+                    <Text style={{ flex: 1, color: '#647F9E', fontSize: 11 }}>{label}</Text>
+                    <Text style={{ flex: 1.3, color: '#142F4D', fontSize: 11, fontWeight: '600' }}>{value}</Text>
+                  </View>
+                ))}
+              </View>
+              <Pressable onPress={() => setViewUpload(null)} style={{ alignSelf: 'flex-end', marginTop: 16, minHeight: 35, paddingHorizontal: 16, backgroundColor: '#00513D', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Close</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
+    </ScrollView>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const [active, setActive] = useState('Dashboard');
@@ -1972,7 +2419,7 @@ export default function App() {
             ))}
           </View>}
 
-          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, and Users & Permissions */}
+          {/* CONTENT — switches between Dashboard, School Configuration, Subjects & Classes, Students, Assessment Configuration, Users & Permissions, and Upload Results */}
           {active === 'School Configuration' ? (
             <SchoolConfigScreen search={search} show={show} />
           ) : active === 'Subjects & Classes' ? (
@@ -1983,6 +2430,8 @@ export default function App() {
             <AssessmentConfigScreen search={search} show={show} />
           ) : active === 'Users & Permissions' ? (
             <UsersPermissionsScreen search={search} show={show} />
+          ) : active === 'Upload Results' ? (
+            <UploadResultsScreen search={search} show={show} />
           ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 30, maxWidth: wideContent ? 1600 : '100%', alignSelf: 'center', width: '100%' }} showsVerticalScrollIndicator={false}>
             {/* Welcome */}
