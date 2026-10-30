@@ -358,7 +358,7 @@ export default function App() {
     if (!veryNarrow && collapsed && width > 900) setCollapsed(false);
   }, [width]);
 
-  const sidebarWidth = collapsed ? 76 : 255;
+  
 
   return (
     <SafeAreaProvider>
@@ -452,7 +452,7 @@ export default function App() {
 
 const s = StyleSheet.create({
   app: { flex: 1, minHeight: '100vh', flexDirection: 'row', backgroundColor: '#F7F9FB' },
-  sidebar: { width: 255, ...(Platform.OS === 'web' ? { position: 'fixed', top: 0, bottom: 0, left: 0, zIndex: 5 } : {}), backgroundColor: COLORS.dark2, paddingHorizontal: 11, paddingTop: 17, paddingBottom: 17 },
+  sidebar: { width: 255, backgroundColor: COLORS.dark2, paddingHorizontal: 11, paddingTop: 17, paddingBottom: 17 },
   brand: { height: 75, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.13)', marginBottom: 20 },
   brandName: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', lineHeight: 18 },
   brandSub: { color: '#DCEFE9', fontSize: 10, marginTop: 3 },
